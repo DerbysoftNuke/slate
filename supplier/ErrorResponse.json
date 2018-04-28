@@ -1,9 +1,0 @@
-{
-    "Header" : {
-        "EchoToken": "18393849028490234",
-        "Channel":"EXPEDIA",
-        "IATA":"0348487"
-    },
-    "ErrorCode":"HotelNotFound",
-    "ErrorMessage":"Can not find hotel [Hotel001]"
-}
