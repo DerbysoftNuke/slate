@@ -1,0 +1,417 @@
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>API Documentation</title>
+
+    <style>
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight .gh {
+  color: #999999;
+}
+.highlight .sr {
+  color: #f6aa11;
+}
+.highlight .go {
+  color: #888888;
+}
+.highlight .gp {
+  color: #555555;
+}
+.highlight .gs {
+}
+.highlight .gu {
+  color: #aaaaaa;
+}
+.highlight .nb {
+  color: #f6aa11;
+}
+.highlight .cm {
+  color: #75715e;
+}
+.highlight .cp {
+  color: #75715e;
+}
+.highlight .c1 {
+  color: #75715e;
+}
+.highlight .cs {
+  color: #75715e;
+}
+.highlight .c, .highlight .cd {
+  color: #75715e;
+}
+.highlight .err {
+  color: #960050;
+}
+.highlight .gr {
+  color: #960050;
+}
+.highlight .gt {
+  color: #960050;
+}
+.highlight .gd {
+  color: #49483e;
+}
+.highlight .gi {
+  color: #49483e;
+}
+.highlight .ge {
+  color: #49483e;
+}
+.highlight .kc {
+  color: #66d9ef;
+}
+.highlight .kd {
+  color: #66d9ef;
+}
+.highlight .kr {
+  color: #66d9ef;
+}
+.highlight .no {
+  color: #66d9ef;
+}
+.highlight .kt {
+  color: #66d9ef;
+}
+.highlight .mf {
+  color: #ae81ff;
+}
+.highlight .mh {
+  color: #ae81ff;
+}
+.highlight .il {
+  color: #ae81ff;
+}
+.highlight .mi {
+  color: #ae81ff;
+}
+.highlight .mo {
+  color: #ae81ff;
+}
+.highlight .m, .highlight .mb, .highlight .mx {
+  color: #ae81ff;
+}
+.highlight .sc {
+  color: #ae81ff;
+}
+.highlight .se {
+  color: #ae81ff;
+}
+.highlight .ss {
+  color: #ae81ff;
+}
+.highlight .sd {
+  color: #e6db74;
+}
+.highlight .s2 {
+  color: #e6db74;
+}
+.highlight .sb {
+  color: #e6db74;
+}
+.highlight .sh {
+  color: #e6db74;
+}
+.highlight .si {
+  color: #e6db74;
+}
+.highlight .sx {
+  color: #e6db74;
+}
+.highlight .s1 {
+  color: #e6db74;
+}
+.highlight .s {
+  color: #e6db74;
+}
+.highlight .na {
+  color: #a6e22e;
+}
+.highlight .nc {
+  color: #a6e22e;
+}
+.highlight .nd {
+  color: #a6e22e;
+}
+.highlight .ne {
+  color: #a6e22e;
+}
+.highlight .nf {
+  color: #a6e22e;
+}
+.highlight .vc {
+  color: #ffffff;
+}
+.highlight .nn {
+  color: #ffffff;
+}
+.highlight .nl {
+  color: #ffffff;
+}
+.highlight .ni {
+  color: #ffffff;
+}
+.highlight .bp {
+  color: #ffffff;
+}
+.highlight .vg {
+  color: #ffffff;
+}
+.highlight .vi {
+  color: #ffffff;
+}
+.highlight .nv {
+  color: #ffffff;
+}
+.highlight .w {
+  color: #ffffff;
+}
+.highlight {
+  color: #ffffff;
+}
+.highlight .n, .highlight .py, .highlight .nx {
+  color: #ffffff;
+}
+.highlight .ow {
+  color: #f92672;
+}
+.highlight .nt {
+  color: #f92672;
+}
+.highlight .k, .highlight .kv {
+  color: #f92672;
+}
+.highlight .kn {
+  color: #f92672;
+}
+.highlight .kp {
+  color: #f92672;
+}
+.highlight .o {
+  color: #f92672;
+}
+    </style>
+    <link href="stylesheets/screen.css" rel="stylesheet" media="screen" />
+    <link href="stylesheets/print.css" rel="stylesheet" media="print" />
+      <script src="javascripts/all_nosearch.js"></script>
+  </head>
+
+  <body class="supplier-api" data-languages="[]">
+    <a href="#" id="nav-button">
+      <span>
+        NAV
+        <img src="images/navbar.png" alt="Navbar" />
+      </span>
+    </a>
+    <div class="toc-wrapper">
+      <img src="images/logo.png" class="logo" alt="Logo" />
+      <div id="toc" class="toc-list-h1">
+      </div>
+    </div>
+    <div class="page-wrapper">
+      <div class="dark-box"></div>
+      <div class="content">
+        <p>&lt;!DOCTYPE html&gt;
+<html>
+<head data-suburl="">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/></p>
+
+<p><meta name="author" content="Gogs" />
+        <meta name="description" content="Gogs is a painless self-hosted Git service" />
+        <meta name="keywords" content="go, git, self-hosted, gogs"></p>
+
+<p><meta name="referrer" content="no-referrer" />
+    <meta name="_csrf" content="mwIwe06S6PdSBpv2yrN2rb83lCA6MTUyNDkxNzIwODQyODc4MTc2Mg==" />
+    <meta name="_suburl" content="" /></p>
+
+<p><meta property="og:url" content="https://git.derbysoft.tm/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="DerbySoft Git">
+        <meta property="og:description" content="Gogs is a painless self-hosted Git service.">
+        <meta property="og:image" content="https://git.derbysoft.tm/img/gogs-lg.png" />
+        <meta property="og:site_name" content="Gogs"></p>
+
+<p><link rel="shortcut icon" href="/img/favicon.png" /></p>
+
+<p><script src="/js/jquery-1.11.3.min.js"></script>
+    <script src="/js/libs/jquery.are-you-sure.js"></script>
+    <link rel="stylesheet" href="/assets/font-awesome-4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/assets/octicons-4.3.0/octicons.min.css"></p>
+
+<p><link rel="stylesheet" href="/css/semantic-2.2.13.min.css">
+    <link rel="stylesheet" href="/css/gogs.css?v=cecb1a897806205111ddb7beeb6f99bc"></p>
+
+<p><script src="/js/semantic-2.2.13.min.js"></script>
+    <script src="/js/gogs.js?v=cecb1a897806205111ddb7beeb6f99bc"></script></p>
+
+<p><title>Sign In - DerbySoft Git</title></p>
+
+<p><meta name="theme-color" content="#ff5343"></p>
+
+<p></head>
+<body>
+    <div class="full height">
+        <noscript>Please enable JavaScript in your browser!</noscript></p>
+
+<p><div class="following bar light">
+                <div class="ui container">
+                    <div class="ui grid">
+                        <div class="column">
+                            <div class="ui top secondary menu">
+                                <a class="item brand" href="/">
+                                    <img class="ui mini image" src="/img/favicon.png">
+                                </a></p>
+
+<p><a class="item" href="/">Home</a></p>
+
+<p><a class="item" href="/explore/repos">Explore</a></p>
+
+<p><a class="item" target="_blank" href="https://gogs.io/docs" rel="noreferrer">Help</a>
+                                    <div class="right menu"></p>
+
+<p><a class="item" href="/user/login?redirect_to=%2fuser%2flogin">
+                                            <i class="octicon octicon-sign-in"></i> Sign In
+                                        </a>
+                                    </div></p>
+
+<p></div>
+                        </div>
+                    </div>
+                </div>
+            </div></p>
+
+<div class="user signin">
+    <div class="ui middle very relaxed page grid">
+        <div class="column">
+            <form class="ui form" action="/user/login" method="post">
+                <input type="hidden" name="_csrf" value="mwIwe06S6PdSBpv2yrN2rb83lCA6MTUyNDkxNzIwODQyODc4MTc2Mg==">
+                <h3 class="ui top attached header">
+                    Sign In
+                </h3>
+                <div class="ui attached segment">
+                    
+
+
+
+
+                    <div class="required inline field ">
+                        <label for="user_name">Username or email</label>
+                        <input id="user_name" name="user_name" value="" autofocus required>
+                    </div>
+                    <div class="required inline field ">
+                        <label for="password">Password</label>
+                        <input id="password" name="password" type="password" value="" required>
+                    </div>
+                    <div class="inline field">
+                        <label></label>
+                        <div class="ui checkbox">
+                            <label>Remember Me</label>
+                            <input name="remember" type="checkbox">
+                        </div>
+                    </div>
+
+                    <div class="inline field">
+                        <label></label>
+                        <button class="ui green button">Sign In</button>
+                        <a href="/user/forget_password">Forgot password?</a>
+                    </div>
+                    
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<p></div>
+    <footer>
+        <div class="ui container">
+            <div class="ui left">
+                © 2017 Gogs Version: 0.11.34.1122 Page: <strong>0ms</strong> Template: <strong>0ms</strong>
+            </div>
+            <div class="ui right links"></p>
+
+<p><div class="ui language bottom floating slide up dropdown link item">
+                    <i class="world icon"></i>
+                    <div class="text">English</div>
+                    <div class="menu"></p>
+
+<p><a class="item active selected" href="#">English</a></p>
+
+<p><a class="item " href="/user/login?lang=zh-CN">简体中文</a></p>
+
+<p><a class="item " href="/user/login?lang=zh-HK">繁體中文（香港）</a></p>
+
+<p><a class="item " href="/user/login?lang=zh-TW">繁體中文（臺灣）</a></p>
+
+<p><a class="item " href="/user/login?lang=de-DE">Deutsch</a></p>
+
+<p><a class="item " href="/user/login?lang=fr-FR">français</a></p>
+
+<p><a class="item " href="/user/login?lang=nl-NL">Nederlands</a></p>
+
+<p><a class="item " href="/user/login?lang=lv-LV">latviešu</a></p>
+
+<p><a class="item " href="/user/login?lang=ru-RU">русский</a></p>
+
+<p><a class="item " href="/user/login?lang=ja-JP">日本語</a></p>
+
+<p><a class="item " href="/user/login?lang=es-ES">español</a></p>
+
+<p><a class="item " href="/user/login?lang=pt-BR">português do Brasil</a></p>
+
+<p><a class="item " href="/user/login?lang=pl-PL">polski</a></p>
+
+<p><a class="item " href="/user/login?lang=bg-BG">български</a></p>
+
+<p><a class="item " href="/user/login?lang=it-IT">italiano</a></p>
+
+<p><a class="item " href="/user/login?lang=fi-FI">suomi</a></p>
+
+<p><a class="item " href="/user/login?lang=tr-TR">Türkçe</a></p>
+
+<p><a class="item " href="/user/login?lang=cs-CZ">čeština</a></p>
+
+<p><a class="item " href="/user/login?lang=sr-SP">српски</a></p>
+
+<p><a class="item " href="/user/login?lang=sv-SE">svenska</a></p>
+
+<p><a class="item " href="/user/login?lang=ko-KR">한국어</a></p>
+
+<p><a class="item " href="/user/login?lang=gl-ES">galego</a></p>
+
+<p><a class="item " href="/user/login?lang=uk-UA">українська</a></p>
+
+<p><a class="item " href="/user/login?lang=en-GB">English (United Kingdom)</a></p>
+
+<p><a class="item " href="/user/login?lang=hu-HU">Magyar</a></p>
+
+<p><a class="item " href="/user/login?lang=sk-SK">slovenský</a></p>
+
+<p></div>
+                </div>
+                <a href="/assets/librejs/librejs.html" style="display:none" data-jslicense="1">Javascript Licenses</a>
+                <a target="_blank" href="https://gogs.io">Website</a>
+                <span class="version">Go1.9.2</span>
+            </div>
+        </div>
+    </footer>
+</body></p>
+
+<script src="/js/libs/emojify-1.1.0.min.js"></script>
+
+<script src="/js/libs/clipboard-1.5.9.min.js"></script>
+
+<p></html></p>
+
+      </div>
+      <div class="dark-box">
+      </div>
+    </div>
+  </body>
+</html>
