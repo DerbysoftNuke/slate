@@ -1,0 +1,14 @@
+{
+    "Header" : {
+        "EchoToken": "18393849028490234",
+        "Channel":"EXPEDIA",
+        "IATA":"0348487"
+    },
+    "Hotel": "Hotel001",
+    "ReservationIDs": {
+        "ChannelResID": "C2084DFL0",
+        "DerbyResID": "D15F893D34DF",
+        "HotelResID": "89389494"        
+    },
+    "Status": "Cancelled" // must be cancelled
+}

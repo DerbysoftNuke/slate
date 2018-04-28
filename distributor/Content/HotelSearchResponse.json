@@ -1,0 +1,24 @@
+{
+    "Header" : {
+        "EchoToken": "18393849028490234",
+        "Channel":"EXPEDIA",
+        "IATA":"0348487"
+    },
+    "Language":"en-US",
+    "Hotels":[
+        {
+            "Code":"WI-1513",
+            "Name":"The Westin Arlington Gateway",
+            "Longitude":-77.1141,
+            "Latitude":38.8802,
+            "Distance": "100m"
+        },
+        {
+            "Code":"WI-9527",
+            "Name":"Stephen Chou Hotel",
+            "Longitude":-77.1141,
+            "Latitude":38.8802,
+            "Distance": "1000km"
+        }
+    ]
+}

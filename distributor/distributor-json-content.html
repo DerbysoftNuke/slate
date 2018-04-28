@@ -1,0 +1,1122 @@
+<h2 id='hotel-search'>Hotel Search</h2>
+<ul>
+<li>URL - https://go.derbysoftsec.com/go/json/hotelsearch/yourusername_in_lower_case</li>
+<li>Method - POST</li>
+</ul>
+
+<p>The Hotel Search transaction allows distributors the ability to search hotel in the DerbySoft cache based on latitude and longitude and a specified radius around these coordinates. </p>
+
+<aside class="info">
+Please note that a search by city is not possible due to cities and their parameters being defined differently by each Distributor and Supplier. 
+</aside>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"Header"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"EchoToken"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18393849028490234"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Channel"</span><span class="p">:</span><span class="w"> </span><span class="s2">"EXPEDIA"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"IATA"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0348487"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Language"</span><span class="p">:</span><span class="w"> </span><span class="s2">"en-US"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"Coordinate"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"Longitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">-77.1141</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Latitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">38.8802</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Distance"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"km"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<blockquote>
+<p>Response for above request</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"Header"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"EchoToken"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18393849028490234"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Channel"</span><span class="p">:</span><span class="w"> </span><span class="s2">"EXPEDIA"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"IATA"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0348487"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Language"</span><span class="p">:</span><span class="w"> </span><span class="s2">"en-US"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"Hotels"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"Code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WI-1513"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The Westin Arlington Gateway"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Longitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">-77.1141</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Latitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">38.8802</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Proximity"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0215215465</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"km"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Direction"</span><span class="p">:</span><span class="w"> </span><span class="s2">"E"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"Code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WI-9527"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Stephen Chou Hotel"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Longitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">-77.1141</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Latitude"</span><span class="p">:</span><span class="w"> </span><span class="mf">38.8802</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Proximity"</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mi"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Direction"</span><span class="p">:</span><span class="w"> </span><span class="s2">"E"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre><h3 id='request'>Request</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Count</th>
+<th>Type</th>
+<th>Size</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Coordinate</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>....Longitude</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>The specific longitude.</td>
+</tr>
+<tr>
+<td>....Latitude</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>The specific latitude.</td>
+</tr>
+<tr>
+<td>....Distance</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>The distance of the coordination. Maximum is 100 km or 62 miles.</td>
+</tr>
+<tr>
+<td>....Unit</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>The unit of distance. Can only be &quot;km&quot; or &quot;mi&quot;.</td>
+</tr>
+</tbody></table>
+<h3 id='response'>Response</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Count</th>
+<th>Type</th>
+<th>Size</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Hotels</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>....Code</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>Hotel unique code.</td>
+</tr>
+<tr>
+<td>....Name</td>
+<td>1</td>
+<td>String</td>
+<td>1024</td>
+<td>Hotel name.</td>
+</tr>
+<tr>
+<td>....Longitude</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>Longitude of the hotel.</td>
+</tr>
+<tr>
+<td>....Latitude</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>Latitude of the hotel.</td>
+</tr>
+<tr>
+<td>....Proximity</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>The proximity of hotel.</td>
+</tr>
+<tr>
+<td>....Unit</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>The unit of Proximity. Can only be &quot;km&quot; or &quot;mi&quot;. &quot;km&quot; is kilometer. &quot;mi&quot; is mile.</td>
+</tr>
+<tr>
+<td>....Direction</td>
+<td>0.1</td>
+<td>Enum</td>
+<td></td>
+<td>Please find details in the Appendix</td>
+</tr>
+</tbody></table>
+<h2 id='hotel-descriptive-info'>Hotel Descriptive Info</h2>
+<ul>
+<li>URL - https://go.derbysoftsec.com/go/json/hoteldescriptiveinfo/yourusername_in_lower_case </li>
+<li>Method - POST</li>
+</ul>
+
+<p>The Hotel Descriptive Info API allows you to get detail hotel information according to specify hotels.</p>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"Header"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"EchoToken"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18393849028490234"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Channel"</span><span class="p">:</span><span class="s2">"EXPEDIA"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"IATA"</span><span class="p">:</span><span class="s2">"0348487"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Language"</span><span class="p">:</span><span class="s2">"en-US"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"Hotels"</span><span class="p">:[</span><span class="s2">"HI-NYCDT"</span><span class="p">,</span><span class="s2">"HI-DUSHI"</span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<blockquote>
+<p>Response for above request</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"Header"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"EchoToken"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18393849028490234"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Channel"</span><span class="p">:</span><span class="s2">"EXPEDIA"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"IATA"</span><span class="p">:</span><span class="s2">"0348487"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Language"</span><span class="p">:</span><span class="s2">"en-US"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"HotelInfo"</span><span class="p">:[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"Code"</span><span class="p">:</span><span class="s2">"HI-DALCH"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Name"</span><span class="p">:</span><span class="s2">"Really Cool Hotel"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"RelativePositions"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Name"</span><span class="p">:</span><span class="s2">"DFW Airport"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"IndexPointCode"</span><span class="p">:</span><span class="mi">6</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Nearest"</span><span class="p">:</span><span class="s2">"true"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Name"</span><span class="p">:</span><span class="s2">"Star Labs"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"IndexPointCode"</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Nearest"</span><span class="p">:</span><span class="s2">"false"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"Description"</span><span class="p">:[</span><span class="w">
+        </span><span class="s2">"The Doubletree Metropolitan Hotel New York City, located at Lexington Avenue and 51st Street in the
+         heart of Midtown Manhattan's fashionable East Side, is walking distance from Park Avenue,Rockefeller Center and the
+         Broadway Theater District. Recently renovated with 21st century amenities and restored to reflect its retro, 1960's
+         glory, the Doubletree Metropolitan is still the ideal place to stay in the Big Apple. Business travelers enjoy the
+         convenience of being in the center of the midtown business district, surrounded by Fortune 500 companies. We offer a
+         full slate of business support services like meeting rooms, a well-appointed Business Center, equipment rentals and
+         highspeed internet access. Walk to world-class shopping on Fifth Avenue and the shops of Madison Avenue, as well as
+         to entertainment attractions like the NBC Studio Tour, Broadway shows and RadioCity Music Hall. We're close to
+         everything that is New York City - Central Park, St. Patrick's Cathedral,the United Nations, The Empire State
+         Building, and Grand Central Station. Do NYC in style from the Doubletree Metropolitan!See and be seen at afternoon
+         tea or with evening cocktails at chic and trendy The Met Bar. Dine at The Met Grill, serving up elegant cuisine in
+         popular surroundings for breakfast, lunch and dinner daily. Work out in our fitness center or be styled in our
+         Salon. Get pampered at the Doubletree Metropolitan. Our Concierge and attentive staff members will attend to your
+         every need, and your comfort is guaranteed. As always - enjoy our very special warm chocolate chip cookie at
+         check-in!"</span><span class="p">,</span><span class="s2">"The Doubletree Metropolitan Hotel always welcome you."</span><span class="w">
+       </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"Position"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"Longitude"</span><span class="p">:</span><span class="mf">-77.1141</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"Latitude"</span><span class="p">:</span><span class="mf">38.8802</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="s2">"Services"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"CodeDetail"</span><span class="p">:</span><span class="s2">"Restaurant"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"BusinessServiceCode"</span><span class="p">:</span><span class="mi">39</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"ProximityCode"</span><span class="p">:</span><span class="mi">1</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="w"> </span><span class="mi">178</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"CodeDetail"</span><span class="p">:</span><span class="s2">"High Speed Internet"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"BusinessServiceCode"</span><span class="p">:</span><span class="mi">52</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"ProximityCode"</span><span class="p">:</span><span class="mi">1</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"GuestRooms"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="s2">"2DB"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"NonSmoking"</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxOccupancy"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MinOccupancy"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxAdultOccupancy"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxChildOccupancy"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"RoomAmenities"</span><span class="p">:[</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"Code"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"Descriptive"</span><span class="p">:</span><span class="s2">"Bathrobes"</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"Code"</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"Descriptive"</span><span class="p">:</span><span class="s2">"Cribs"</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"Code"</span><span class="p">:</span><span class="mi">28</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"Descriptive"</span><span class="p">:</span><span class="s2">"VCR Player"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="s2">"3DB"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"NonSmoking"</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxOccupancy"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MinOccupancy"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxAdultOccupancy"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxChildOccupancy"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Features"</span><span class="p">:[</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"AccessibleCode"</span><span class="p">:</span><span class="mi">1</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"AccessibleCode"</span><span class="p">:</span><span class="mi">2</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">]</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"Policies"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"CheckInTime"</span><span class="p">:</span><span class="s2">"15:00:00"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"CheckOutTime"</span><span class="p">:</span><span class="s2">"12:00:00"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"AcceptedGuestType"</span><span class="p">:</span><span class="s2">"AdultOnly"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"KidsStayFree"</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxChildAge"</span><span class="p">:</span><span class="mi">15</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MinGuestAge"</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"PetsAllowedCode"</span><span class="p">:</span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"PetsPolicy"</span><span class="p">:</span><span class="s2">""</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"CheckInTime"</span><span class="p">:</span><span class="s2">"21:00:00"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"CheckOutTime"</span><span class="p">:</span><span class="s2">"23:32:20"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxChildAge"</span><span class="p">:</span><span class="mi">15</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MinGuestAge"</span><span class="p">:</span><span class="mi">0</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"AreaInfo"</span><span class="p">:{</span><span class="w">
+        </span><span class="s2">"Recreations"</span><span class="p">:[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"Code"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CodeDetail"</span><span class="p">:</span><span class="s2">""</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"ProximityCode"</span><span class="p">:</span><span class="s2">"Nearby"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"ProximityCode"</span><span class="p">:</span><span class="s2">"Offsite"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="s2">"Multimedia"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Images"</span><span class="p">:[</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"Category"</span><span class="p">:</span><span class="mi">6</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"URL"</span><span class="p">:</span><span class="s2">"http://xxxxx.xx2"</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"Caption"</span><span class="p">:</span><span class="s2">"GuestRoom"</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"Category"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"URL"</span><span class="p">:</span><span class="s2">"http://xxxxx.xx1"</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"Caption"</span><span class="p">:</span><span class="s2">"Exterior"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">]</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"Airports"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="s2">"443"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Name"</span><span class="p">:</span><span class="s2">"Tokyo International Airport"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Direction"</span><span class="p">:</span><span class="s2">"E"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Distance"</span><span class="p">:</span><span class="mi">200</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Unit"</span><span class="p">:</span><span class="s2">"km"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Description"</span><span class="p">:</span><span class="s2">"International airport"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="s2">"222"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Name"</span><span class="p">:</span><span class="s2">"PuDong International Airport"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"ContactInfo"</span><span class="p">:{</span><span class="w">
+        </span><span class="s2">"Addresses"</span><span class="p">:[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"StreetNmbr"</span><span class="p">:</span><span class="s2">"346 CoolStreet"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CityName"</span><span class="p">:</span><span class="s2">"Coolsville"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"PostalCode"</span><span class="p">:</span><span class="s2">"34568"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"StateProv"</span><span class="p">:</span><span class="s2">"CA"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CountryName"</span><span class="p">:</span><span class="s2">"USA"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CountryCode"</span><span class="p">:</span><span class="s2">"US"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"StreetNmbr"</span><span class="p">:</span><span class="s2">"502 NiceStreet"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CityName"</span><span class="p">:</span><span class="s2">"StarCity"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CountryCode"</span><span class="p">:</span><span class="s2">"US"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">],</span><span class="w">
+        </span><span class="s2">"URLs"</span><span class="p">:[</span><span class="w">
+          </span><span class="s2">"http://coolhotel.coolbrand.com/awesome.html"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"http://coolname.brand.com/nice.html"</span><span class="w">
+        </span><span class="p">],</span><span class="w">
+        </span><span class="s2">"Phones"</span><span class="p">:[</span><span class="s2">"021-21352212"</span><span class="p">,</span><span class="s2">"036-213545"</span><span class="p">],</span><span class="w">
+        </span><span class="s2">"Emails"</span><span class="p">:[</span><span class="s2">"example1@hotelname.com"</span><span class="p">,</span><span class="s2">"example2@hotelname.com"</span><span class="p">],</span><span class="w">
+        </span><span class="s2">"Faxes"</span><span class="p">:[</span><span class="s2">"hotel faxes1"</span><span class="p">,</span><span class="s2">"hotel faxes2"</span><span class="p">],</span><span class="w">
+        </span><span class="s2">"TPA_Extension"</span><span class="p">:[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"Key"</span><span class="p">:</span><span class="s2">"ChannelCode"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"Value"</span><span class="p">:</span><span class="s2">"DJAA"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"Key"</span><span class="p">:</span><span class="s2">"RatePlanName"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"Value"</span><span class="p">:</span><span class="s2">"DB_A"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"Key"</span><span class="p">:</span><span class="s2">"Description"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"Value"</span><span class="p">:</span><span class="s2">"This is a rate plan"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"Code"</span><span class="p">:</span><span class="s2">"HI-MINDC"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Name"</span><span class="p">:</span><span class="s2">"Star Hotel"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"RelativePositions"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Name"</span><span class="p">:</span><span class="s2">"DDD Airport"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"IndexPointCode"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Nearest"</span><span class="p">:</span><span class="s2">"true"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Name"</span><span class="p">:</span><span class="s2">"Star City"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"IndexPointCode"</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Nearest"</span><span class="p">:</span><span class="s2">"false"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"Description"</span><span class="p">:</span><span class="s2">"The Doubletree Metropolitan Hotel New York Citylocated at Lexington Avenue."</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"Position"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"Longitude"</span><span class="p">:</span><span class="mf">-77.1141</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"Latitude"</span><span class="p">:</span><span class="mf">38.8802</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="s2">"Services"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"CodeDetail"</span><span class="p">:</span><span class="s2">"Music Service"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"BusinessServiceCode"</span><span class="p">:</span><span class="mi">39</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"ProximityCode"</span><span class="p">:</span><span class="mi">1</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"CodeDetail"</span><span class="p">:</span><span class="s2">"Video Game"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"BusinessServiceCode"</span><span class="p">:</span><span class="mi">22</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"ProximityCode"</span><span class="p">:</span><span class="mi">1</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"GuestRooms"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="s2">"DJM_DA"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"NonSmoking"</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxOccupancy"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MinOccupancy"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxAdultOccupancy"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxChildOccupancy"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"RoomAmenities"</span><span class="p">:[</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"Code"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"Descriptive"</span><span class="p">:</span><span class="s2">"Bathrobes"</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"Code"</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"Descriptive"</span><span class="p">:</span><span class="s2">"Cribs"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">],</span><span class="w">
+          </span><span class="s2">"DescriptiveText"</span><span class="p">:</span><span class="s2">"Standard King with Lemonade Dispenser"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="s2">"IMKD"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"NonSmoking"</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxOccupancy"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MinOccupancy"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxAdultOccupancy"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxChildOccupancy"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Features"</span><span class="p">:[</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"AccessibleCode"</span><span class="p">:</span><span class="mi">1</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"AccessibleCode"</span><span class="p">:</span><span class="mi">2</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">],</span><span class="w">
+          </span><span class="s2">"DescriptiveText"</span><span class="p">:</span><span class="s2">"Standard Queue with Lemonade Dispenser"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"Policy"</span><span class="p">:{</span><span class="w">
+          </span><span class="s2">"CheckInTime"</span><span class="p">:</span><span class="s2">"15:00:00"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"CheckOutTime"</span><span class="p">:</span><span class="s2">"12:00:00"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"AcceptedGuestType"</span><span class="p">:</span><span class="s2">"AdultOnly"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"KidsStayFree"</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MaxChildAge"</span><span class="p">:</span><span class="mi">15</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"MinGuestAge"</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"PetsAllowedCode"</span><span class="p">:</span><span class="s2">""</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"PetsPolicy"</span><span class="p">:</span><span class="s2">""</span><span class="w">
+       </span><span class="p">},</span><span class="w">
+      </span><span class="s2">"AreaInfo"</span><span class="p">:{</span><span class="w">
+        </span><span class="s2">"Recreations"</span><span class="p">:[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"Code"</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CodeDetail"</span><span class="p">:</span><span class="s2">""</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"ProximityCode"</span><span class="p">:</span><span class="s2">"Nearby"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"ProximityCode"</span><span class="p">:</span><span class="s2">"Offsite"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="s2">"Multimedia"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Images"</span><span class="p">:[</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"Category"</span><span class="p">:</span><span class="mi">6</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"URL"</span><span class="p">:</span><span class="s2">"http://xxxxx.xx2"</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"Caption"</span><span class="p">:</span><span class="s2">"GuestRoom"</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="s2">"Category"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"URL"</span><span class="p">:</span><span class="s2">"http://xxxxx.xx1"</span><span class="p">,</span><span class="w">
+              </span><span class="s2">"Caption"</span><span class="p">:</span><span class="s2">"Exterior"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">]</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"Airport"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="s2">"423"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Name"</span><span class="p">:</span><span class="s2">"Famous Airport"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Direction"</span><span class="p">:</span><span class="s2">"E"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Distance"</span><span class="p">:</span><span class="mi">110</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Unit"</span><span class="p">:</span><span class="s2">"km"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Description"</span><span class="p">:</span><span class="s2">"International airport"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"Code"</span><span class="p">:</span><span class="s2">"21"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"Name"</span><span class="p">:</span><span class="s2">"PuDong International Airport"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"ContactInfo"</span><span class="p">:{</span><span class="w">
+        </span><span class="s2">"Addresses"</span><span class="p">:[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"StreetNmbr"</span><span class="p">:</span><span class="s2">"346 CoolStreet"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CityName"</span><span class="p">:</span><span class="s2">"Coolsville"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"PostalCode"</span><span class="p">:</span><span class="s2">"34568"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"StateProv"</span><span class="p">:</span><span class="s2">"CA"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CountryName"</span><span class="p">:</span><span class="s2">"USA"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CountryCode"</span><span class="p">:</span><span class="s2">"US"</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="s2">"StreetNmbr"</span><span class="p">:</span><span class="s2">"502 NiceStreet"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"PostalCode"</span><span class="p">:</span><span class="s2">"StarCity"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"CountryCode"</span><span class="p">:</span><span class="s2">"US"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">],</span><span class="w">
+        </span><span class="s2">"URLs"</span><span class="p">:[</span><span class="w">
+          </span><span class="s2">"http://coolhotel.coolbrand.com/awesome.html"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"http://coolname.brand.com/nice.html"</span><span class="w">
+        </span><span class="p">],</span><span class="w">
+        </span><span class="s2">"Phones"</span><span class="p">:[</span><span class="s2">"021-21352212"</span><span class="p">,</span><span class="s2">"036-213545"</span><span class="p">],</span><span class="w">
+        </span><span class="s2">"Emails"</span><span class="p">:[</span><span class="s2">"example1@hotelname.com"</span><span class="p">,</span><span class="s2">"example2@hotelname.com"</span><span class="p">],</span><span class="w">
+        </span><span class="s2">"Faxes"</span><span class="p">:[</span><span class="s2">"hotel faxes1"</span><span class="p">,</span><span class="s2">"hotel faxes2"</span><span class="p">]</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre><h3 id='request-2'>Request</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Count</th>
+<th>Type</th>
+<th>Size</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Hotels</td>
+<td>1.n</td>
+<td>String</td>
+<td>128</td>
+<td>Maximum 20 hotels</td>
+</tr>
+</tbody></table>
+<h3 id='response-2'>Response</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Count</th>
+<th>Type</th>
+<th>Size</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>HotelInfo</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>....Code</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>Hotel unique code.</td>
+</tr>
+<tr>
+<td>....Name</td>
+<td>1</td>
+<td>String</td>
+<td>1024</td>
+<td>Hotel name.</td>
+</tr>
+<tr>
+<td>....RelativePositions</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td>Hotel relative positions.</td>
+</tr>
+<tr>
+<td>........Name</td>
+<td>1</td>
+<td>String</td>
+<td>1024</td>
+<td>Name of position</td>
+</tr>
+<tr>
+<td>........IndexPointCode</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>OTA Code Type: IPC</td>
+</tr>
+<tr>
+<td>........Nearest</td>
+<td>0.1</td>
+<td>Boolean</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>....Description</td>
+<td>0.n</td>
+<td>String</td>
+<td>64k</td>
+<td>The description of this hotel.</td>
+</tr>
+<tr>
+<td>....Position</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>........Longitude</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>The Longitude of the hotel.</td>
+</tr>
+<tr>
+<td>........Latitude</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>The Latitude of the hotel.</td>
+</tr>
+<tr>
+<td>....Services</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>........Code</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>OTA Code Type: HAC</td>
+</tr>
+<tr>
+<td>........CodeDetail</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>Description of code</td>
+</tr>
+<tr>
+<td>........BusinessServiceCode</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>OTA Code Type: BUS</td>
+</tr>
+<tr>
+<td>........ProximityCode</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>Not used</td>
+</tr>
+<tr>
+<td>....GuestRooms</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>........Code</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>Room type unique code. Could be different with the room type code on availability response.</td>
+</tr>
+<tr>
+<td>........NonSmoking</td>
+<td>1</td>
+<td>Boolean</td>
+<td></td>
+<td>Not used</td>
+</tr>
+<tr>
+<td>........MaxOccupancy</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>Max acceptable adult count for the room.</td>
+</tr>
+<tr>
+<td>........MinOccupancy</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>Min acceptable occupancy for the room. Includes adult and children</td>
+</tr>
+<tr>
+<td>........MaxAdultOccupancy</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>Max acceptable occupancy for the room. Includes adult and children</td>
+</tr>
+<tr>
+<td>........MaxChildOccupancy</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>Max acceptable child count for the room.</td>
+</tr>
+<tr>
+<td>........RoomAmenities</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>............Code</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>OTA Code Type: RMA</td>
+</tr>
+<tr>
+<td>............DescriptiveText</td>
+<td>0.1</td>
+<td>String</td>
+<td>2048</td>
+<td></td>
+</tr>
+<tr>
+<td>........Features</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>............AccessibleCode</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>........DescriptiveText</td>
+<td>1</td>
+<td>String</td>
+<td>2014</td>
+<td>Room description</td>
+</tr>
+<tr>
+<td>....Policy</td>
+<td>0.1</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>........CheckInTime</td>
+<td>0.1</td>
+<td>String</td>
+<td>10</td>
+<td>Format is HH:mm:ss. Null or empty means unknown.</td>
+</tr>
+<tr>
+<td>........CheckOutTime</td>
+<td>0.1</td>
+<td>String</td>
+<td>10</td>
+<td>Format is HH:mm:ss. Null or empty means unknown.</td>
+</tr>
+<tr>
+<td>........AcceptedGuestType</td>
+<td>0.1</td>
+<td>String</td>
+<td></td>
+<td>Not used</td>
+</tr>
+<tr>
+<td>........KidsStayFree</td>
+<td>0.1</td>
+<td>Boolean</td>
+<td></td>
+<td>Not used</td>
+</tr>
+<tr>
+<td>........MaxChildAge</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>Maximum child age. Null means unknown.</td>
+</tr>
+<tr>
+<td>........MinGuestAge</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>Minimum guest age. Null means unknown.</td>
+</tr>
+<tr>
+<td>........PetsAllowedCode</td>
+<td>0.1</td>
+<td>String</td>
+<td></td>
+<td>Please go to Appendix to see details. IHG only.</td>
+</tr>
+<tr>
+<td>........PetsPolicy</td>
+<td>0.1</td>
+<td>String</td>
+<td></td>
+<td>Description of Pet’s policy</td>
+</tr>
+<tr>
+<td>....AreaInfo</td>
+<td>0.1</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>........Recreations</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>............Code</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>OTA Code Type</td>
+</tr>
+<tr>
+<td>............CodeDetail</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>not used</td>
+</tr>
+<tr>
+<td>............ProximityCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>64</td>
+<td>Can be &#39;Onsite&#39;,&#39;Offsite&#39;,&#39;Nearby&#39;</td>
+</tr>
+<tr>
+<td>....Multimedia</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>........Images</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>............Category</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>OTA Code Type: &quot;PIC&quot;.</td>
+</tr>
+<tr>
+<td>............URL</td>
+<td>1</td>
+<td>String</td>
+<td>1024</td>
+<td>The URL of the image.</td>
+</tr>
+<tr>
+<td>............Caption</td>
+<td>0.1</td>
+<td>String</td>
+<td>2048</td>
+<td>The Caption of the image.</td>
+</tr>
+<tr>
+<td>....Airport</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>........Code</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td></td>
+</tr>
+<tr>
+<td>........Name</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td></td>
+</tr>
+<tr>
+<td>........Direction</td>
+<td>0.1</td>
+<td>Enum</td>
+<td></td>
+<td>Please find details in the Appendix</td>
+</tr>
+<tr>
+<td>........Distance</td>
+<td>0.1</td>
+<td>Double</td>
+<td>1024</td>
+<td></td>
+</tr>
+<tr>
+<td>........Unit</td>
+<td>0.1</td>
+<td>Enum</td>
+<td></td>
+<td>The unit of the distance, should only be &quot;km&quot; or &quot;mi&quot;.</td>
+</tr>
+<tr>
+<td>........Description</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>The description of this airport.</td>
+</tr>
+<tr>
+<td>....ContactInfo</td>
+<td>0.1</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>........Addresses</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>............StreetNumber</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td></td>
+</tr>
+<tr>
+<td>............CityName</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td></td>
+</tr>
+<tr>
+<td>............PostalCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>64</td>
+<td></td>
+</tr>
+<tr>
+<td>............StateProv</td>
+<td>0.1</td>
+<td>String</td>
+<td>256</td>
+<td></td>
+</tr>
+<tr>
+<td>............CountryName</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td></td>
+</tr>
+<tr>
+<td>............CountryCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>16</td>
+<td></td>
+</tr>
+<tr>
+<td>........URLs</td>
+<td>0.n</td>
+<td>String</td>
+<td>1024</td>
+<td></td>
+</tr>
+<tr>
+<td>........Phones</td>
+<td>0.n</td>
+<td>String</td>
+<td>32</td>
+<td></td>
+</tr>
+<tr>
+<td>........Emails</td>
+<td>0.n</td>
+<td>String</td>
+<td>1024</td>
+<td></td>
+</tr>
+<tr>
+<td>........Faxes</td>
+<td>0.n</td>
+<td>String</td>
+<td>32</td>
+<td></td>
+</tr>
+<tr>
+<td>........TPA_Extension</td>
+<td>0.n</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>............Key</td>
+<td>1</td>
+<td>String</td>
+<td>1024</td>
+<td></td>
+</tr>
+<tr>
+<td>............Value</td>
+<td>1</td>
+<td>String</td>
+<td>1024</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id='content-change'>Content Change</h2>
+<ul>
+<li>URL - https://go.derbysoftsec.com/go/json/hotelcontentchange/yourusername_in_lower_case </li>
+<li>Method - POST</li>
+</ul>
+
+<p>Distributor will initiate a request to Derbysoft about hotel context in a certain time stamp after there is no change, if there is a change, we will provide them with a list of changed hotel codes.</p>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"Header"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"EchoToken"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18393849028490234"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Channel"</span><span class="p">:</span><span class="s2">"EXPEDIA"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"IATA"</span><span class="p">:</span><span class="s2">"0348487"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Language"</span><span class="p">:</span><span class="s2">"en-US"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"Timestamp"</span><span class="p">:</span><span class="s2">"2016-01-02T10:22:36"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<blockquote>
+<p>Response for above request</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"Header"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"EchoToken"</span><span class="p">:</span><span class="w"> </span><span class="s2">"18393849028490234"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Channel"</span><span class="p">:</span><span class="s2">"EXPEDIA"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"IATA"</span><span class="p">:</span><span class="s2">"0348487"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"Language"</span><span class="p">:</span><span class="s2">"en-US"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"Hotels"</span><span class="p">:[</span><span class="s2">"HI-ATTSD"</span><span class="p">,</span><span class="s2">"CARLSON-ABCDE"</span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre><h3 id='request-3'>Request</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Count</th>
+<th>Type</th>
+<th>Size</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Timestamp</td>
+<td>1</td>
+<td>String</td>
+<td></td>
+<td>UTC time. yyyy-MM-ddTHH:mm:ss, We return the hotel code if there are changes after this timestamp.</td>
+</tr>
+</tbody></table>
+<h3 id='response-3'>Response</h3>
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Count</th>
+<th>Type</th>
+<th>Size</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Hotels</td>
+<td>0.n</td>
+<td>String[]</td>
+<td></td>
+<td>Hotel unique code that changed since LastModifyDateTime in request.</td>
+</tr>
+</tbody></table>

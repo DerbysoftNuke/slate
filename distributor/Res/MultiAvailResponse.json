@@ -1,0 +1,80 @@
+{
+  "Header": {
+    "Version": "v0.1",
+    "EchoToken": "18393849028490234",
+    "Channel": "EXPEDIA",
+    "IATA": "0348487"
+  },
+  "Availabilities": [
+    {
+      "Hotel": "Hotel001",
+      "StayDateRange": {
+        "CheckIn": "2016-01-01",
+        "CheckOut": "2016-01-03"
+      },
+      "RoomRates": {
+        "GuestCount": {
+          "AdultCount": 1,
+          "ChildCount": 2,
+          "ChildAges": [4,8]
+        },
+        "Rates": [
+          {
+            "RoomType": "STD",
+            //			"RoomTypeName":"STD", add
+            "RatePlan": "BAR",
+            //          "Currency": "USD", question
+            "Fees": [
+              {
+                "Name": "City Tax",
+                "Type": "Inclusive",
+                "Amount": 2.00,
+                "Unit": "PerRoomPerNight"
+              },
+              {
+                "Name": "Service Charge",
+                "Type": "Exclusive",
+                "Percent": 5
+              }
+            ],
+            "CancelPolicy": {
+              "Code": "6PM2D1N_100P",
+              "Descriptioin": "No charge if you cancel it before 2 days, charge first night if you cancel it in 2 days, full payment if you no-show"
+            },
+            "MealPlan": "RO",
+            "Inventory": 1,
+            //          "ExtraPersonCharge": 230.2, add
+            "AmountBeforeTax": [100.00,100.00,120.00],
+            "AmountAfterTax": [120.00,120.00,132.00]
+          },
+          {
+            "RoomType": "DB",
+            "RatePlan": "AP",
+            "Currency": "USD",
+            "Fees": [
+              {
+                "Name": "City Tax",
+                "Type": "Inclusive",
+                "Amount": 2.00,
+                "Unit": "PerRoomPerNight"
+              },
+              {
+                "Name": "Service Charge",
+                "Type": "Exclusive",
+                "Percent": 5
+              }
+            ],
+            "CancelPolicy": {
+              "Code": "AD100P_100P",
+              "Descriptioin": "Non Refundable"
+            },
+            "MealPlan": "BB",
+            "Inventory": 2,
+            "AmountBeforeTax": [100.00,100.00,120.00],
+            "AmountAfterTax": [120.00,120.00,132.00]
+          }
+        ]
+      }
+    }
+  ]
+}

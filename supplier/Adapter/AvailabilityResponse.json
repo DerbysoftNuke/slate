@@ -1,0 +1,73 @@
+{
+    "Header" : {
+        "Version": "v0.1",
+        "EchoToken": "18393849028490234",
+        "Channel":"EXPEDIA",
+        "IATA":"0348487"
+    },
+    "Hotel": "Hotel001",
+    "StayDateRange": {
+        "CheckIn": "2016-01-01",
+        "CheckOut": "2016-01-03"
+    },
+    "RoomCriteria" : {
+        "RoomCount": 2,
+        "AdultCount": 1,  // per room adult count  
+        "ChildCount": 2,  // per room child count
+        "ChildAges": [4,8]   // optional, array size MUST be same as child count
+    },    
+    "RoomRates": [
+        {
+            "RoomType": "STD",
+            "RatePlan": "BAR",
+            "Currency": "USD",
+            "Fees": [
+                {
+                    "Name": "City Tax",
+                    "Type": "Inclusive",
+                    "Amount": 2.00,
+                    "Unit": "PerRoomPerNight" // could be PerRoomPerNight, PerPersonPerNight, PerRoomPerStay, PerPersonPerStay
+                },
+                {
+                    "Name": "Service Charge",
+                    "Type": "Exclusive",
+                    "Percent": 5
+                }
+            ],
+            "CancelPolicy": {
+                "Code": "6PM2D1N_100P",
+                "Descriptioin": "No charge if you cancel it before 2 days, 1 night charge if you cancel it in 2 days, full payment when you are no-show"
+            },
+            "MealPlan": "RO",
+            "Inventory": 1,
+            "AmountBeforeTax": [100.00,100.00,120.00],
+            "AmountAfterTax": [120.00,120.00,132.00]
+        },
+        {
+            "RoomType": "DB",
+            "RatePlan": "AP",
+            "Currency": "USD",
+            "Fees": [
+                {
+                    "Name": "City Tax",
+                    "Type": "Inclusive",
+                    "Amount": 2.00,
+                    "Unit": "PerRoomPerNight" // could be PerRoomPerNight, PerPersonPerNight, PerRoomPerStay, PerPersonPerStay
+                },
+                {
+                    "Name": "Service Charge",
+                    "Type": "Exclusive",
+                    "Percent": 5
+                }
+            ],
+            "CancelPolicy": {
+                "Code": "AD100P_100P",
+                "Descriptioin": "Non Refundable"
+            },
+            "MealPlan": "BB2",
+            "Inventory": 2,
+            "AmountBeforeTax": [100.00,100.00,120.00],
+            "AmountAfterTax": [120.00,120.00,132.00]
+        }
+    ]
+}

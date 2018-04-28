@@ -1,0 +1,13 @@
+{
+    "Header" : {
+        "Version": "v0.1",
+        "EchoToken": "18393849028490234",
+        "Channel":"EXPEDIA",
+        "IATA":"0348487"
+    },
+    "Hotel": "Hotel001",
+    "DateRange": {
+        "StartDate": "2016-01-01",
+        "EndDate": "2016-01-07" // end date is included        
+    }
+}

@@ -1,0 +1,114 @@
+Distributor -> DerbySoft : HotelSearch
+DerbySoft -> Distributor
+Distributor -> DerbySoft : HotelDescriptiveInfo
+DerbySoft -> Distributor
+DerbySoft <- Supplier: Conttent Push or Pull
+Distributor -> DerbySoft : GetChange
+DerbySoft -> Distributor
+
+
+Distributor -> DerbySoft : Multi-Availability
+DerbySoft -> Distributor
+Distributor -> DerbySoft : Live Availability Check
+DerbySoft -> Supplier : Live Availability Check
+Supplier -> DerbySoft
+DerbySoft -> Distributor
+Distributor -> DerbySoft : Book Reservation
+DerbySoft -> Supplier : Book Reservation
+Supplier -> DerbySoft
+DerbySoft -> Distributor
+Distributor -> DerbySoft : Cancel Reservation
+DerbySoft -> Supplier : Cancel Reservation
+Supplier -> DerbySoft
+DerbySoft -> Distributor
+Distributor -> DerbySoft : Query Reservation
+DerbySoft -> Distributor
+
+
+### Figure 1 Content Transaction Flow
+```text
+     ┌───────────┐          ┌─────────┐            ┌────────┐
+     │Distributor│          │DerbySoft│            │Supplier│
+     └─────┬─────┘          └────┬────┘            └───┬────┘
+           │    HotelSearch      │                     │     
+           │────────────────────>│                     │     
+           │<────────────────────│                     │     
+           │                     │                     │     
+           │HotelDescriptiveInfo │                     │     
+           │────────────────────>│Conttent Push or Pull│     
+           │<────────────────────│<────────────────────|     
+           │                     │                     │     
+           │                     │                     │     
+           │     GetChange       │                     │     
+           │────────────────────>│                     │     
+           │<────────────────────│                     │     
+     ┌─────┴─────┐          ┌────┴────┐            ┌───┴────┐
+     │Distributor│          │DerbySoft│            │Supplier│
+     └───────────┘          └─────────┘            └────────┘
+```
+
+
+### Figure 2 Availability, Booking, Cancel Flow
+
+```text
+     ┌───────────┐             ┌─────────┐              ┌────────┐
+     │Distributor│             │DerbySoft│              │Supplier│
+     └─────┬─────┘             └────┬────┘              └───┬────┘
+           │  Multi-Availability    │                       │     
+           │───────────────────────>│                       │     
+           │<───────────────────────│                       │     
+           │                        │                       │     
+           │                        │                       │     
+           │Live Availability Check │                       │     
+           │───────────────────────>│Live Availability Check│
+           │                        │──────────────────────>|     
+           │                        │<──────────────────────|     
+           │<───────────────────────│                       │     
+           │                        │                       │     
+           │                        │                       │     
+           │   Book Reservation     │                       │     
+           │───────────────────────>│   Book Reservation    │     
+           │                        │──────────────────────>|     
+           │                        │<──────────────────────|     
+           │<───────────────────────│                       │     
+           │                        │                       │     
+           │                        │                       │     
+           │  Cancel Reservation    │                       │     
+           │───────────────────────>│  Cancel Reservation   │     
+           │                        │──────────────────────>|     
+           │                        │<──────────────────────|     
+           │<───────────────────────│                       │     
+           │                        │                       │     
+           │                        │                       │     
+           │   Query Reservation    │                       │     
+           │───────────────────────>│                       │     
+           │<───────────────────────│                       │     
+     ┌─────┴─────┐             ┌────┴────┐              ┌───┴────┐
+     │Distributor│             │DerbySoft│              │Supplier│
+     └───────────┘             └─────────┘              └────────┘
+```
+
+```
+     ┌────────┐          ┌───────────┐          ┌────────────────┐                       ┌─────────┐
+     │Customer│          │Distributor│          │DistributorCache│                       │DerbySoft│
+     └───┬────┘          └─────┬─────┘          └───────┬────────┘                       └────┬────┘
+         │       Search        │                        │                                     │     
+         │ ===================>│                        │                                     │     
+         │                     │  Multi-Availability    │                                     │     
+         │                     │=======================>│                                     │     
+         │                     │                        │ Cache Missed then Multi-Availability│     
+         │                     │                        │ :::::::::::::::::::::::::::::::::::>|     
+         │                     │                        │ <:::::::::::::::::::::::::::::::::::|     
+         │                     │<=======================│                                     │     
+         │ <===================│                        │                                     │     
+         │                     │                        │                 CDS                 │     
+         │                     │                        │ ===================================>|     
+         │                     │                        │ <===================================|     
+         │                     │                        │                                     │     
+         │                     │                        │          Multi-Availability         │     
+         │                     │                        │ ===================================>|     
+         │                     │                        │ <===================================|     
+     ┌───┴────┐          ┌─────┴─────┐          ┌───────┴────────┐                       ┌────┴────┐
+     │Customer│          │Distributor│          │DistributorCache│                       │DerbySoft│
+     └────────┘          └───────────┘          └────────────────┘                       └─────────┘
+```

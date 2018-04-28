@@ -1,0 +1,28 @@
+{
+    "Header" : {
+        "Version": "v0.1",
+        "EchoToken": "18393849028490234",
+        "Channel":"EXPEDIA",
+        "IATA":"0348487"
+    },
+    "Hotels":["Hotel001","Hotel0002","Hotel0003","Hotel0004"],
+    "StayDateRange": {
+        "CheckIn": "2016-01-01",
+        "CheckOut": "2016-01-03"
+    },
+    "RoomGuestCounts" :[
+	{
+        "AdultCount": 2,
+        "ChildCount": 0
+    },
+	{
+        "AdultCount": 2,
+        "ChildCount": 0
+    },
+	{
+        "AdultCount": 2,
+        "ChildCount": 1,
+        "ChildAges": [8]       
+    }
+	]
+}

@@ -1,0 +1,4414 @@
+<h1 id='5ec45258f8'>历史版本</h1>
+<table><thead>
+<tr>
+<th>作者</th>
+<th style="text-align: center">版本</th>
+<th style="text-align: center">邮箱</th>
+<th style="text-align: center">日期</th>
+<th style="text-align: right">描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Liam.Wang</td>
+<td style="text-align: center">1.0</td>
+<td style="text-align: center">liam.wang@derbysoft.com</td>
+<td style="text-align: center">2017-07-05</td>
+<td style="text-align: right">初始版本</td>
+</tr>
+</tbody></table>
+<h1 id='153042ed9e'>概述</h1>
+<p>Go 渠道 API 是德比软件对酒店销售渠道定制开放的一整套后端接口，包括酒店预定、取消、查询、验价，数据实时缓存和酒店内容服务。
+酒店销售渠道可通过此套接口实现与任何已有酒店供应商的对接，并且大大减少增加新的供应商对接所需要的成本。
+本 API 开发文档将详细说明如何利用这些接口来完成酒店和渠道的对接，以及各种注意事项。</p>
+<h2 id='fb91bb259a'>对接模型</h2>
+<blockquote>
+<p>Figure 1 Content Transaction Flow</p>
+</blockquote>
+<pre class="highlight plaintext"><code>     ┌───────────┐          ┌─────────┐            ┌────────┐
+     │Distributor│          │DerbySoft│            │Supplier│
+     └─────┬─────┘          └────┬────┘            └───┬────┘
+           │    HotelSearch      │                     │     
+           │────────────────────&gt;│                     │     
+           │&lt;────────────────────│                     │     
+           │                     │                     │     
+           │HotelDescriptiveInfo │                     │     
+           │────────────────────&gt;│Content Push or Pull │     
+           │&lt;────────────────────│&lt;────────────────────|     
+           │                     │                     │     
+           │                     │                     │     
+           │     GetChange       │                     │     
+           │────────────────────&gt;│                     │     
+           │&lt;────────────────────│                     │     
+     ┌─────┴─────┐          ┌────┴────┐            ┌───┴────┐
+     │Distributor│          │DerbySoft│            │Supplier│
+     └───────────┘          └─────────┘            └────────┘
+</code></pre>
+<p><br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br></p>
+
+<blockquote>
+<p>Figure 2 Availability, Booking, Cancel Transaction Flow</p>
+</blockquote>
+<pre class="highlight plaintext"><code>     ┌───────────┐             ┌─────────┐              ┌────────┐
+     │Distributor│             │DerbySoft│              │Supplier│
+     └─────┬─────┘             └────┬────┘              └───┬────┘
+           │  Multi-Availability    │                       │     
+           │───────────────────────&gt;│                       │     
+           │&lt;───────────────────────│                       │     
+           │                        │                       │     
+           │                        │                       │     
+           │Live Availability Check │                       │     
+           │───────────────────────&gt;│Live Availability Check│
+           │                        │──────────────────────&gt;|     
+           │                        │&lt;──────────────────────|     
+           │&lt;───────────────────────│                       │     
+           │                        │                       │     
+           │                        │                       │     
+           │   Book Reservation     │                       │     
+           │───────────────────────&gt;│   Book Reservation    │     
+           │                        │──────────────────────&gt;|     
+           │                        │&lt;──────────────────────|     
+           │&lt;───────────────────────│                       │     
+           │                        │                       │     
+           │                        │                       │     
+           │  Cancel Reservation    │                       │     
+           │───────────────────────&gt;│  Cancel Reservation   │     
+           │                        │──────────────────────&gt;|     
+           │                        │&lt;──────────────────────|     
+           │&lt;───────────────────────│                       │     
+           │                        │                       │     
+           │  Query Reservation     │                       │     
+           │───────────────────────&gt;│                       │     
+           │&lt;───────────────────────│                       │     
+           │                        │                       │     
+     ┌─────┴─────┐             ┌────┴────┐              ┌───┴────┐
+     │Distributor│             │DerbySoft│              │Supplier│
+     └───────────┘             └─────────┘              └────────┘
+</code></pre>
+<p><br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br></p>
+
+<blockquote>
+<p>Figure 3 Cache Flow</p>
+</blockquote>
+<pre class="highlight plaintext"><code>┌────────┐          ┌───────────┐          ┌────────────────┐                  ┌─────────┐
+│Customer│          │Distributor│          │DistributorCache│                  │DerbySoft│
+└───┬────┘          └─────┬─────┘          └───────┬────────┘                  └────┬────┘
+    │       Search        │                        │                                │     
+    │ ───────────────────&gt;│                        │                                │     
+    │                     │  Multi-Availability    │                                │     
+    │                     │───────────────────────&gt;│                                │     
+    │                     │                        │ Cache Missed Multi-Availability│     
+    │                     │                        │ ..............................&gt;|     
+    │                     │                        │ &lt;..............................|     
+    │                     │&lt;───────────────────────│                                │     
+    │ &lt;───────────────────│                        │                                │     
+    │                     │                        │                 CDS            │     
+    │                     │                        │ ──────────────────────────────&gt;|     
+    │                     │                        │ &lt;──────────────────────────────|     
+    │                     │                        │                                │     
+    │                     │                        │          Multi-Availability    │     
+    │                     │                        │ ──────────────────────────────&gt;|     
+    │                     │                        │ &lt;──────────────────────────────|     
+┌───┴────┐          ┌─────┴─────┐          ┌───────┴────────┐                  ┌────┴────┐
+│Customer│          │Distributor│          │DistributorCache│                  │DerbySoft│
+└────────┘          └───────────┘          └────────────────┘                  └─────────┘
+</code></pre>
+<p><br>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br></p>
+<h2 id='7e44f67352'>对接过程</h2>
+<p>当渠道已经与德比软件签订了通过Go API进行对接的合同之后，渠道根据我们提供的API接口文档和相关测试环境的信息可以开始进行开发和验证。</p>
+
+<p>下面的步骤只用实施一次无论一个渠道希望对接多少个酒店供应商。</p>
+
+<ul>
+<li>德比软件实施人员会将Go的实施调查问卷提供给渠道。</li>
+<li>渠道完成调查问卷并提交给德比。</li>
+<li>德比软件的实施人员会通过邮件将测试环境相关信息发送给渠道。</li>
+<li>渠道开发完成并完成自测。</li>
+<li>德比软件实施人员确认测试用例并通知渠道相关结果。</li>
+<li>渠道将他们已经签订合同的供应商通知德比软件，并确认可以开始三方测试。</li>
+</ul>
+
+<aside class="info">
+在此过程中的任何问题请联系 Go.dev@derbysoft.net 
+</aside>
+
+<p>当渠道的认证过程通过之后，三方测试就可以开始了。一个渠道无论对接多少供应商，都需要首先进行三方测试，这是为了保证订单流程畅通。</p>
+<h1 id='api'>API 通用信息说明</h1><h2 id='web-service'>Web Service 规范</h2>
+<ul>
+<li>所有网络传输协议均为HTTPS，请求方法为POST。</li>
+<li>我们支持SOAP（Simple Object Access Protocol ）协议传输， SOAP 协议版本为1.1。</li>
+<li>HTTP Header是必须的:</li>
+</ul>
+<pre class="highlight http tab-http"><code><span class="nf">POST</span> <span class="nn">/xml/availability</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Authorization</span><span class="p">:</span> <span class="s">53ac07777cdffac2d53000002d698728ce964432d7167596bc005c5fc</span>
+<span class="na">Accept-Encoding</span><span class="p">:</span> <span class="s">gzip</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">text/xml;charset=utf-8</span>
+</code></pre>
+<ul>
+<li>标准SOAP结构
+<code>xml
+&lt;SOAP-ENV:Envelope xmlns:SOAP-ENV=&quot;http://schemas.xmlsoap.org/soap/envelope/&quot; 
+xmlns:SOAP-ENC=&quot;http://schemas.xmlsoap.org/soap/encoding/&quot; 
+xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; 
+xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;
+&lt;SOAP-ENV:Body&gt;
+&lt;!--MessageType Message Body--&gt;
+&lt;/SOAP-ENV:Body&gt; 
+&lt;/SOAP-ENV:Envelope&gt;
+</code></li>
+<li>WSDL信息</li>
+</ul>
+
+<blockquote>
+<p>Availability &amp; Reservation WSDL</p>
+</blockquote>
+
+<p>http://uatgo.derbysoftsec.com/go/xml/doorway.wsdl</p>
+
+<blockquote>
+<p>Content WSDL</p>
+</blockquote>
+
+<p>http://uatgo.derbysoftsec.com/hotel/content/propertySearch.wsdl</p>
+<h2 id='b76b5a7c91'>语言与字符集</h2>
+<ul>
+<li>所有API以UTF-8字符集为标准。</li>
+<li>API中所有的字段如评论、客人的姓名、取消政策的描述以及税费的名字都为拉丁字符。</li>
+<li>如果渠道需要在订单中传输非拉丁字符，德比软件可以做字符的罗马化，如果需要此项服务，请告知我们。</li>
+</ul>
+<h2 id='937163245d'>关于权限与认证</h2>
+<p>德比软件会为每个接入的渠道分配一个唯一的Authorization，只有在Http Header中包含此Token的请求才能访问德比软件提供的API服务。示例如下：
+<code>html
+Authorization: zCc23JLtqCPO2Lzn9S0000013c23ba5a31684af36dc8401fa46354ac
+</code>
+德比软件同时会为每个接入的渠道分配唯一的用户名和密码，此用户名和密码应该包含在每个请求中。示例如下：</p>
+<pre class="highlight xml tab-xml"><code><span class="err">&lt;</span>×××Request xmlns="http://www.derbysoft.com/doorway" 
+UserName="Test" Password="KjIsleioc" Token="******"&gt; 
+......
+<span class="err">&lt;</span>/×××Request&gt;
+</code></pre><h2 id='f14fb6b6de'>关于接口的超时设置</h2>
+<table><thead>
+<tr>
+<th>API名称</th>
+<th>默认超时（ms）</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Ping</td>
+<td>1000</td>
+</tr>
+<tr>
+<td>Change Discovery</td>
+<td>5000</td>
+</tr>
+<tr>
+<td>Multiple Availability</td>
+<td>5000</td>
+</tr>
+<tr>
+<td>Single Availability</td>
+<td>120000</td>
+</tr>
+<tr>
+<td>Make Reservation</td>
+<td>120000</td>
+</tr>
+<tr>
+<td>Query Reservation</td>
+<td>120000</td>
+</tr>
+<tr>
+<td>Cancel Reservation</td>
+<td>120000</td>
+</tr>
+<tr>
+<td>Content Hotel search</td>
+<td>60000</td>
+</tr>
+<tr>
+<td>Content Hotel Descriptive Info</td>
+<td>60000</td>
+</tr>
+<tr>
+<td>Content Change</td>
+<td>60000</td>
+</tr>
+</tbody></table>
+<h2 id='api-2'>关于API的流控</h2>
+<p>我们会对每个接口进行适当地限流，如果超出我们的限制，你会得到 <code>Http 429 Too Many Request</code> 的错误，但是您可以跟我们联系并沟通以获得更多的流量。</p>
+
+<p><br>
+ <br></p>
+<h1 id='api-3'>API 说明</h1>
+<p>主要包含 Shopping API，Reservation API 和 Content API （当前版本不包含 Content API） 三部分，共有 10 个接口，分别为：
+* Ping
+* Multiple Availability
+* Change Discovery
+* Live Availability Check (指 Single Availability)
+* Reservation
+* Cancellation
+* Query Reservation
+* Content Hotel Search （当前版本不包含）
+* Content Hotel Descriptive Info （当前版本不包含）
+* Content Change（当前版本不包含）</p>
+
+<p>下面讲分别讲解这些接口的使用场景与具体的接口说明。</p>
+<h2 id='ping'>连通性测试 Ping</h2>
+<blockquote>
+<p>URL for shopping - https://go.derbysoftsec.com/go/xml/ping/yourusername/
+Method - POST</p>
+</blockquote>
+
+<p>主要用于测试渠道系统与 Derby 系统的连通性，不代表 Derby 到酒店供应商系统的连通性。</p>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;PingRequest</span> <span class="na">Token=</span><span class="s">"E30ED3AA-65DE-48F9-BEA4-BA021B119625"</span> 
+<span class="na">UserName=</span><span class="s">"test"</span> <span class="na">Password=</span><span class="s">"TEST"</span> <span class="na">Echo=</span><span class="s">"Hello!"</span><span class="nt">/&gt;</span>
+</code></pre>
+<blockquote>
+<p>上述请求的应答</p>
+</blockquote>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;PingResponse</span> <span class="na">Token=</span><span class="s">"E30ED3AA-65DE-48F9-BEA4-BA021B119625"</span>
+  <span class="na">Status=</span><span class="s">"Success"</span>  <span class="na">Echo=</span><span class="s">"Hello!"</span><span class="nt">/&gt;</span>
+</code></pre><h3 id='405cb0a78a'>请求参数说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte)</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一id,由渠道传给Derby</td>
+</tr>
+<tr>
+<td>@UserName</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>分配给渠道的用户名</td>
+</tr>
+<tr>
+<td>@Password</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>分配给渠道的密码</td>
+</tr>
+<tr>
+<td>@Echo</td>
+<td>1</td>
+<td>String</td>
+<td>256</td>
+<td>Ping 的消息</td>
+</tr>
+</tbody></table>
+<h3 id='b302a98fa6'>返回字段说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte)</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一id，由渠道传给Derby</td>
+</tr>
+<tr>
+<td>@Status</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>Successful or Failed.</td>
+</tr>
+<tr>
+<td>@Echo</td>
+<td>1</td>
+<td>String</td>
+<td>256</td>
+<td>Ping 响应消息</td>
+</tr>
+</tbody></table>
+<h1 id='30c76c86cd'>酒店数据缓存接口</h1>
+<p>酒店缓存接口提供了高性能，稳定可靠的数据缓存服务，渠道可以通过调用此接口来实现自己的数据缓存或者直接用于数据展示。</p>
+
+<p>最佳实践为首先使用ChangeDiscovery来检查在某个日期区间内，某些酒店是否有数据变化，然后通过将变化的酒店和日期作为参数再调用MultipleAvailability接口获取具体的数据。</p>
+<h2 id='change-discovery'>查询变化的酒店数据（Change Discovery）</h2>
+<ul>
+<li>URL - https://go.derbysoftsec.com/go/xml/changediscovery/yourusername/</li>
+<li>Method - POST</li>
+</ul>
+
+<p>渠道通过调用此接口来得知酒店在某个时间段是否有数据变化（价格，房量，房态等），从而更加高效的将数据缓存到渠道端。</p>
+
+<p>Derby会限制每个请求最多请求31天的数据，但可以通过其他方式来发送超过31天的请求，如：渠道希望知道TestHotel 在2017-01-01至2017-03-01时间段内酒店数据有没有变化，可以发送两个时间段不大于31天的请求来实现，第一个请求发送的时间段为2017-01-01至2017-01-31，第二个请求发送的时间段可以为2017-02-01至2017-03-01。</p>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;ChangeDiscoveryRequest</span> <span class="na">xmlns=</span><span class="s">"http://www.derbysoft.com/doorway"</span> 
+<span class="na">UserName=</span><span class="s">"test"</span> <span class="na">Password=</span><span class="s">"test"</span> <span class="na">Token=</span><span class="s">"9cdf88d2-6b4c-4f7f-a42e-a51db0fd1488"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;DateRange</span> <span class="na">Start=</span><span class="s">"2015-03-01"</span> <span class="na">End=</span><span class="s">"2015-03-31"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;Hotels&gt;</span> 
+        <span class="nt">&lt;HotelCode</span> <span class="na">Timestamp=</span><span class="s">"2015-01-01T12:00:12"</span><span class="nt">&gt;</span>Hotel1<span class="nt">&lt;/HotelCode&gt;</span>
+        <span class="nt">&lt;HotelCode</span> <span class="na">Timestamp=</span><span class="s">"2015-01-01T12:02:12"</span><span class="nt">&gt;</span>Hotel2<span class="nt">&lt;/HotelCode&gt;</span>
+    <span class="nt">&lt;/Hotels&gt;</span>
+<span class="nt">&lt;/ChangeDiscoveryRequest&gt;</span>
+</code></pre>
+<blockquote>
+<p>上述请求的应答</p>
+</blockquote>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;ChangeDiscoveryResponse</span> <span class="na">xmlns=</span><span class="s">"http://www.derbysoft.com/doorway"</span> 
+<span class="na">Status=</span><span class="s">"Successful"</span> <span class="na">Token=</span><span class="s">"9cdf88d2-6b4c-4f7f-a42e-a51db0fd1488"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;DateRange</span> <span class="na">Start=</span><span class="s">"2015-03-01"</span> <span class="na">End=</span><span class="s">"2015-03-31"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;HotelChanges&gt;</span>
+        <span class="nt">&lt;HotelChange</span> <span class="na">Code=</span><span class="s">"Hotel1"</span><span class="nt">&gt;</span>0001001011110011111010101010001<span class="nt">&lt;/HotelChange&gt;</span>
+        <span class="nt">&lt;HotelChange</span> <span class="na">Code=</span><span class="s">"Hotel2"</span><span class="nt">&gt;</span>1111001011110011100000111010011<span class="nt">&lt;/HotelChange&gt;</span>
+    <span class="nt">&lt;/HotelChanges&gt;</span>
+<span class="nt">&lt;/ChangeDiscoveryResponse&gt;</span>
+</code></pre><h3 id='405cb0a78a-2'>请求参数说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte)</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/ChangeDiscoveryRequest</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>...@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一id，由渠道传给Derby</td>
+</tr>
+<tr>
+<td>...@UserName</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用于标识渠道的用户名</td>
+</tr>
+<tr>
+<td>...@Password</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用户名对应的密码</td>
+</tr>
+<tr>
+<td>.../DateRange</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>查询的日期范围</td>
+</tr>
+<tr>
+<td>.....@Start</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>起始日期，当天包含在内，格式为yyyy-MM-dd</td>
+</tr>
+<tr>
+<td>.....@End</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>终止日期，当天包含在内，格式为yyyy-MM-dd，最大日期范围是31天</td>
+</tr>
+<tr>
+<td>.../Hotels</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>..../HotelCode</td>
+<td>1.100</td>
+<td>String</td>
+<td>128</td>
+<td>查询的酒店唯一ID</td>
+</tr>
+<tr>
+<td>...@Timestamp</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>上一次此酒店数据变化的时间点，UTC时间，格式为 yyyy-MM-ddThh:mm:ss</td>
+</tr>
+</tbody></table>
+<h3 id='b302a98fa6-2'>返回字段说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte)</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/ChangeDiscoveryResponse</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>..@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一id，由渠道传给Derby</td>
+</tr>
+<tr>
+<td>..@Status</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>此次请求的状态，只能为[ &#39;Successful&#39; or &#39;Failed&#39; ]</td>
+</tr>
+<tr>
+<td>../DateRange</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.....@Start</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>起始日期，当天包含在内，格式为yyyy-MM-dd</td>
+</tr>
+<tr>
+<td>.....@End</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>终止日期，当天包含在内，格式为yyyy-MM-dd，最大日期范围是31天</td>
+</tr>
+<tr>
+<td>../HotelChanges</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>...../HotelChange</td>
+<td>1.100</td>
+<td>String</td>
+<td></td>
+<td>代表酒店数据的变化，为0和1的组合，0代表此酒店没有数据变化，1代表在以上时间段数据有变化</td>
+</tr>
+<tr>
+<td>.....@Code</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>酒店的唯一ID</td>
+</tr>
+</tbody></table>
+<h2 id='multiple-availability'>批量查看房源数据（Multiple Availability）</h2>
+<ul>
+<li>URL - https://go.derbysoftsec.com/go/xml/multipleavailability/yourusername/</li>
+<li>Method - POST</li>
+</ul>
+
+<p>此接口根据请求条件返回可用的酒店数据，包括可用的房型、价格计划、售价、取消政策、税费、早餐等。请求的条件包括：入住日期、离店日期、需要的房间数量、成人小孩数量及小孩年龄。如果没有符合条件的数据，将会返回空的应答，类似于：
+<code>xml
+&lt;MultiAvailabilityResponse Token=&quot;TestToken&quot; Status=&quot;Successful&quot;&gt;
+     &lt;Availabilities&gt;
+         &lt;Availability/&gt;
+     &lt;/Availabilities&gt;
+ &lt;/MultiAvailabilityResponse&gt;
+</code>
+此接口的设计初衷为帮助渠道实现酒店售卖页面展示或者建立渠道端自己的缓存系统，所以此接口具有响应时间短，低延迟，高并发的特点。</p>
+
+<aside class="notice">
+
+* 每次请求最多只能包含20家酒店，超过这个限制的请求我们会直接返回相关错误。
+* 为防止异常调用，我们会限制您的访问频率，具体限制您可以参阅：关于Go的限速策略
+
+</aside>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;MultiAvailabilityRequest</span> <span class="na">xmlns=</span><span class="s">"http://www.derbysoft.com/doorway"</span> 
+<span class="na">Password=</span><span class="s">"test"</span> <span class="na">Token=</span><span class="s">"187be58c62c2f2515b5d78ee"</span> <span class="na">UserName=</span><span class="s">"Test"</span><span class="nt">&gt;</span> 
+  <span class="nt">&lt;MultiAvailabilityCriteria</span> <span class="na">NumberOfUnits=</span><span class="s">"1"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;StayDateRange</span> <span class="na">CheckIn=</span><span class="s">"2015-10-11"</span> <span class="na">CheckOut=</span><span class="s">"2015-10-17"</span><span class="nt">/&gt;</span> 
+    <span class="nt">&lt;GuestCounts&gt;</span>
+      <span class="nt">&lt;GuestCount</span> <span class="na">AdultCount=</span><span class="s">"1"</span> <span class="na">ChildCount=</span><span class="s">"2"</span> <span class="na">ChildAges=</span><span class="s">"8,10"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;GuestCount</span> <span class="na">AdultCount=</span><span class="s">"2"</span> <span class="na">ChildCount=</span><span class="s">"1"</span> <span class="na">ChildAges=</span><span class="s">"11"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/GuestCounts&gt;</span> 
+    <span class="nt">&lt;HotelCodes&gt;</span>
+      <span class="nt">&lt;HotelCode&gt;</span>IHG-BOMAP<span class="nt">&lt;/HotelCode&gt;</span> 
+      <span class="nt">&lt;HotelCode&gt;</span>IHG-CHIRC<span class="nt">&lt;/HotelCode&gt;</span>
+    <span class="nt">&lt;/HotelCodes&gt;</span>
+  <span class="nt">&lt;/MultiAvailabilityCriteria&gt;</span>
+<span class="nt">&lt;/MultiAvailabilityRequest&gt;</span>
+
+</code></pre>
+<blockquote>
+<p>上述请求的响应如下：</p>
+</blockquote>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;MultiAvailabilityResponse</span> <span class="na">xmlns=</span><span class="s">"http://www.derbysoft.com/doorway"</span> 
+<span class="na">Status=</span><span class="s">"Successful"</span> <span class="na">Token=</span><span class="s">"187be58c62c2f2515b5d78ee"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Availabilities&gt;</span>
+    <span class="nt">&lt;Availability</span> <span class="na">CurrencyCode=</span><span class="s">"INR"</span> <span class="na">HotelCode=</span><span class="s">"IHG-BOMAP"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;GuestCount</span> <span class="na">AdultCount=</span><span class="s">"1"</span> <span class="na">ChildCount=</span><span class="s">"2"</span> <span class="na">ChildAges=</span><span class="s">"8,10"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;RoomTypes&gt;</span>
+        <span class="nt">&lt;RoomType</span> <span class="na">RoomTypeCode=</span><span class="s">"KDXN"</span> <span class="na">RoomTypeName=</span><span class="s">"1 KING SUPERIOR NONSMOKING"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;RoomTypeDescription&gt;</span>1 KING SUPERIOR NONSMOKING<span class="nt">&lt;/RoomTypeDescription&gt;</span>
+        <span class="nt">&lt;/RoomType&gt;</span>
+        <span class="nt">&lt;RoomType</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span> <span class="na">RoomTypeName=</span><span class="s">"DELUXE ROOM"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;RoomTypeDescription&gt;</span>DELUXE ROOM<span class="nt">&lt;/RoomTypeDescription&gt;</span>
+        <span class="nt">&lt;/RoomType&gt;</span>
+      <span class="nt">&lt;/RoomTypes&gt;</span>
+      <span class="nt">&lt;RatePlans&gt;</span>
+        <span class="nt">&lt;RatePlan</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RatePlanName=</span><span class="s">"IDH15"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;RatePlan</span> <span class="na">RatePlanCode=</span><span class="s">"IDU15"</span> <span class="na">RatePlanName=</span><span class="s">"IDU15"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;/RatePlans&gt;</span>
+      <span class="nt">&lt;RoomRates&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RoomTypeCode=</span><span class="s">"KDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8453.760"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7140.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-12"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8982.120"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7586.250"</span>
+             <span class="na">EffectiveDate=</span><span class="s">"2015-10-12"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"6843.520"</span> <span class="na">AmountBeforeTax=</span><span class="s">"5780.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDU15"</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"12580.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"10625.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10567.200"</span> <span class="na">AmountBeforeTax=</span><span class="s">"8925.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties&gt;</span>
+              <span class="nt">&lt;CancelPenalty</span> <span class="na">MaxHoursBeforeCheckIn=</span><span class="s">"48"</span> <span class="na">MinHoursBeforeCheckIn=</span><span class="s">"0"</span> 
+              <span class="na">Nights=</span><span class="s">"1"</span> <span class="na">NoShow=</span><span class="s">"false"</span> <span class="nt">/&gt;</span>
+              <span class="nt">&lt;CancelPenalty</span> <span class="na">Nights=</span><span class="s">"1"</span> <span class="na">NoShow=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;/CancelPenalties&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10064.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"8500.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-12"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10693.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"9031.250"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-12"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8453.760"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7140.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+      <span class="nt">&lt;/RoomRates&gt;</span>
+    <span class="nt">&lt;/Availability&gt;</span>
+    <span class="nt">&lt;Availability</span> <span class="na">CurrencyCode=</span><span class="s">"INR"</span> <span class="na">HotelCode=</span><span class="s">"IHG-BOMAP"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;GuestCount</span> <span class="na">AdultCount=</span><span class="s">"2"</span> <span class="na">ChildCount=</span><span class="s">"1"</span> <span class="na">ChildAges=</span><span class="s">"11"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;RoomTypes&gt;</span>
+      <span class="nt">&lt;RoomType</span> <span class="na">RoomTypeCode=</span><span class="s">"KDXN"</span> <span class="na">RoomTypeName=</span><span class="s">"1 KING SUPERIOR NONSMOKING"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;RoomTypeDescription&gt;</span>1 KING SUPERIOR NONSMOKING<span class="nt">&lt;/RoomTypeDescription&gt;</span>
+        <span class="nt">&lt;/RoomType&gt;</span>
+        <span class="nt">&lt;RoomType</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span> <span class="na">RoomTypeName=</span><span class="s">"DELUXE ROOM"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;RoomTypeDescription&gt;</span>DELUXE ROOM<span class="nt">&lt;/RoomTypeDescription&gt;</span>
+        <span class="nt">&lt;/RoomType&gt;</span>
+      <span class="nt">&lt;/RoomTypes&gt;</span>
+      <span class="nt">&lt;RatePlans&gt;</span>
+        <span class="nt">&lt;RatePlan</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RatePlanName=</span><span class="s">"IDH15"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;RatePlan</span> <span class="na">RatePlanCode=</span><span class="s">"IDU15"</span> <span class="na">RatePlanName=</span><span class="s">"IDU15"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;/RatePlans&gt;</span>
+      <span class="nt">&lt;RoomRates&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RoomTypeCode=</span><span class="s">"KDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8453.760"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7140.000"</span>
+             <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-12"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8982.120"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7586.250"</span>
+             <span class="na">EffectiveDate=</span><span class="s">"2015-10-12"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"6843.520"</span> <span class="na">AmountBeforeTax=</span><span class="s">"5780.000"</span>
+             <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDU15"</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"12580.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"10625.000"</span>
+             <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10567.200"</span> <span class="na">AmountBeforeTax=</span><span class="s">"8925.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties&gt;</span>
+              <span class="nt">&lt;CancelPenalty</span> <span class="na">MaxHoursBeforeCheckIn=</span><span class="s">"48"</span> <span class="na">MinHoursBeforeCheckIn=</span><span class="s">"0"</span>
+               <span class="na">Nights=</span><span class="s">"1"</span> <span class="na">NoShow=</span><span class="s">"false"</span> <span class="nt">/&gt;</span>
+              <span class="nt">&lt;CancelPenalty</span> <span class="na">Nights=</span><span class="s">"1"</span> <span class="na">NoShow=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;/CancelPenalties&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10064.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"8500.000"</span>
+             <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-12"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10693.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"9031.250"</span>
+             <span class="na">EffectiveDate=</span><span class="s">"2015-10-12"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8453.760"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7140.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+      <span class="nt">&lt;/RoomRates&gt;</span>
+    <span class="nt">&lt;/Availability&gt;</span>    
+    <span class="nt">&lt;/Availabilities&gt;</span>
+<span class="nt">&lt;/MultiAvailabilityResponse&gt;</span>
+</code></pre><h3 id='bd2beaa998'>请求参数说名</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte)</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/MultiAvailabilityRequest</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一id，由渠道传给Derby</td>
+</tr>
+<tr>
+<td>@UserName</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用于标识渠道的用户名</td>
+</tr>
+<tr>
+<td>@Password</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用户名对应的密码</td>
+</tr>
+<tr>
+<td>/MultiAvailabilityCriteria</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.@NumberOfUnits</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>总的房间数量</td>
+</tr>
+<tr>
+<td>./StayDateRange</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>入住的日期区间</td>
+</tr>
+<tr>
+<td>..@CheckIn</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>入住日期，包含当天，格式为 yyyy-MM-dd</td>
+</tr>
+<tr>
+<td>..@CheckOut</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>离店日期，不包含当天，格式为yyyy-MM-dd</td>
+</tr>
+<tr>
+<td>./GuestCounts</td>
+<td>1</td>
+<td>List</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>../GuestCount</td>
+<td>1.n</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>...@AdultCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房入住人信息</td>
+</tr>
+<tr>
+<td>...@ChildCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的成人数量</td>
+</tr>
+<tr>
+<td>...@ChildAges</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>小孩年龄，多个小孩年龄用英文逗号（,）分隔，并且和小孩数量是对应的。如果小孩数量大于零，则小孩年龄一定不能为空。</td>
+</tr>
+<tr>
+<td>./HotelCodes</td>
+<td>1</td>
+<td>List</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>../HotelCode</td>
+<td>1.20</td>
+<td>String</td>
+<td>128</td>
+<td>酒店的唯一ID，最大数量为20</td>
+</tr>
+</tbody></table>
+<h3 id='b302a98fa6-3'>返回字段说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte)</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/MultiAvailabilityResponse</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一id</td>
+</tr>
+<tr>
+<td>@Status</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>此次请求的状态，只能为[ &#39;Successful&#39; or &#39;Failed&#39; ]</td>
+</tr>
+<tr>
+<td>/Availabilities</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>./Availability</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>..@CurrencyCode</td>
+<td>1</td>
+<td>String</td>
+<td>3</td>
+<td>标识货币的唯一ID，遵循 ISO 4217</td>
+</tr>
+<tr>
+<td>..@HotelCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>酒店的唯一标识ID</td>
+</tr>
+<tr>
+<td>../GuestCount</td>
+<td>1.n</td>
+<td>Object</td>
+<td></td>
+<td>每间房的入住人信息，跟请求中的入住人信息相对应</td>
+</tr>
+<tr>
+<td>...@AdultCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的成人数量</td>
+</tr>
+<tr>
+<td>...@ChildCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的小孩数量</td>
+</tr>
+<tr>
+<td>...@ChildAges</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>小孩年龄，多个小孩年龄用英文逗号（,）分隔，并且和小孩数量是对应的。如果小孩数量大于零，则小孩年龄一定不会为空。</td>
+</tr>
+<tr>
+<td>../RoomTypes</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.../RoomType</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>标识一个房型列表</td>
+</tr>
+<tr>
+<td>....@RoomTypeCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>房型唯一ID</td>
+</tr>
+<tr>
+<td>....@RoomTypeName</td>
+<td>0.1</td>
+<td>String</td>
+<td>256</td>
+<td>房型名称</td>
+</tr>
+<tr>
+<td>..../RoomTypeDescription</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>房型描述信息</td>
+</tr>
+<tr>
+<td>../RatePlans</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.../RatePlan</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>标识一个价格计划列表</td>
+</tr>
+<tr>
+<td>....@RatePlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>价格计划ID</td>
+</tr>
+<tr>
+<td>....@RatePlanName</td>
+<td>0.1</td>
+<td>String</td>
+<td>256</td>
+<td>价格计划名称</td>
+</tr>
+<tr>
+<td>..../RatePlanDescription</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>价格计划描述信息</td>
+</tr>
+<tr>
+<td>..../CancelPolicy</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消政策（<strong>这是已经废弃的节点，为兼容旧的渠道保留，新开发的渠道请不要使用</strong>）</td>
+</tr>
+<tr>
+<td>...../CancelPenalties</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消惩罚政策</td>
+</tr>
+<tr>
+<td>....../CancelPenalty</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表取消惩罚政策的列表</td>
+</tr>
+<tr>
+<td>.......@MinHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最小时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>.......@MaxHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最大时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>.......@Deadline</td>
+<td>1</td>
+<td>String</td>
+<td>8</td>
+<td>表示最迟入住的时间点，格式示例为 12AM, 4:30PM.</td>
+</tr>
+<tr>
+<td>.......@Nights</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示罚款的间夜数，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@Price</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款的金额，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款相对于当次入住总金额的百分比，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@NoShow</td>
+<td>0.1</td>
+<td>Boolean</td>
+<td></td>
+<td>是否为NoShow的惩罚，当NoShow为True时，MinHoursBeforeCheckIn 和MaxHoursBeforeCheckIn为空。</td>
+</tr>
+<tr>
+<td>../RoomRates</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.../RoomRate</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表具体房型的相关价格信息的列表</td>
+</tr>
+<tr>
+<td>....@RoomTypeCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>房型的唯一ID</td>
+</tr>
+<tr>
+<td>....@RatePlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>价格计划的唯一ID</td>
+</tr>
+<tr>
+<td>....@MealPlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>8</td>
+<td>含餐信息的唯一ID</td>
+</tr>
+<tr>
+<td>..../Rates</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>...../Rate</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表此房型在此价格计划以及含餐信息下的具体价格信息列表</td>
+</tr>
+<tr>
+<td>......@EffectiveDate</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>价格信息的有效时间，这个日期是包含的。</td>
+</tr>
+<tr>
+<td>......@ExpireDate</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>价格信息的无效时间，这个日期是不包含的。</td>
+</tr>
+<tr>
+<td>......@AmountBeforeTax</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>税前价</td>
+</tr>
+<tr>
+<td>......@AmountAfterTax</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>税后价</td>
+</tr>
+<tr>
+<td>......@ExtraPersonCharge</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>每加一个人需要收取的额外的税前费用，详见附录。</td>
+</tr>
+<tr>
+<td>......@ExtraPersonChargeAfterTax</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>每加一个人需要收取的额外的税后费用，详见附录。</td>
+</tr>
+<tr>
+<td>..../Fees</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>税规则，详细例子请见附录。</td>
+</tr>
+<tr>
+<td>...../Fee</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>详细税规则列表</td>
+</tr>
+<tr>
+<td>......@ChargeType</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>表示税规则的名称，如CityFee（城市税）或ServiceCharge（服务税）等。</td>
+</tr>
+<tr>
+<td>......@Type</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>[ Inclusive, Exclusive, Cumulative ]，表示此税是否已经包含在了上面（/Rates 节点）的价格内。</td>
+</tr>
+<tr>
+<td>......@EffectiveDate</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>税规则的生效时间，当天是包含在内的，一定与EffectiveDate一起出现或不出现。格式为yyyy-MM-dd，示例：2017-01-01</td>
+</tr>
+<tr>
+<td>......@ExpireDate</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>税规则的失效时间，当天是不包含在内的，一定与ExpireDate一起出现或不出现。格式为yyyy-MM-dd，示例：2017-01-09</td>
+</tr>
+<tr>
+<td>......@Unit</td>
+<td>0.1</td>
+<td>Enum</td>
+<td></td>
+<td>[ PER_ROOM_PER_NIGHT, PER_PERSON_PER_NIGHT, PER_ROOM_PER_STAY,  PER_PERSON_PER_STAY ] 表示税规则的单位，如果Amount不为空的时候，此值一定不会为空，反之此值可能为空。</td>
+</tr>
+<tr>
+<td>......@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>收取税的比例，当Amount为空的时候，此值一定不为空。不与@Amount同时存在。</td>
+</tr>
+<tr>
+<td>......@Amount</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>收取税的具体金额，当Percent为空的时候，此值一定不为空。不与@Percent同时存在。</td>
+</tr>
+<tr>
+<td>..../CancelPolicy</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消政策</td>
+</tr>
+<tr>
+<td>...../CancelPenalties</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消惩罚政策</td>
+</tr>
+<tr>
+<td>....../CancelPenalty</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表取消惩罚政策的列表</td>
+</tr>
+<tr>
+<td>.......@MinHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最小时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>.......@MaxHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最大时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>.......@Deadline</td>
+<td>0.1</td>
+<td>String</td>
+<td>8</td>
+<td>表示最迟入住的时间点，格式示例为 12AM, 4:30PM.</td>
+</tr>
+<tr>
+<td>.......@Nights</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示罚款的间夜数，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@Price</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款的金额，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款相对于当次入住总金额的百分比，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@NoShow</td>
+<td>0.1</td>
+<td>Boolean</td>
+<td></td>
+<td>是否为NoShow的惩罚，当NoShow为True时，MinHoursBeforeCheckIn 和MaxHoursBeforeCheckIn为空。</td>
+</tr>
+</tbody></table>
+<h1 id='cfcd348ebd'>酒店预订接口</h1><h2 id='live-availability-check'>查看房源数据（Live Availability Check）</h2>
+<ul>
+<li>URL - https://go.derbysoftsec.com/go/xml/singleavailability/yourusername/</li>
+<li>Method - POST</li>
+</ul>
+
+<p>此接口会根据查询条件，如入住和离店日期，预订的房间数量，客人信息（小孩数量，成人数量，有时小孩年龄也会相关），从而返回最新的酒店价格、房量、房态、价格计划，取消政策等信息，在某些情况下，也会直接请求到Derby的缓存系统中。此接口一般是在下单之前（Make reservation）调用做价格校验或者展现最新的价格给客户。</p>
+
+<p>与Multiple Availability不同的是：
+ * Live Availability Check一般用作下单前校验或渠道在下单前展现最新的价格给客户，而Multiple Availability一般用作渠道售卖页面的数据展示或者渠道的数据缓存。
+ * Live Availability Check每次只请求一家酒店，而Multiple Availability支持同时请求多家酒店（单次请求最多20家酒店）
+ * Live Availability Check绝大多数情况下会直接将请求发送到酒店供应商的系统中，而Multiple Availability 会直接从Derby缓存中取数据
+ * Live Availability Check返回的数据一般情况下会比Multiple Availability更加接近酒店最新价格，但绝大部分情况两者数据是一致的
+ * Live Availability Check的响应时间会比较慢，而Multiple Availability性能会更好，详见：Go接口响应时间
+ * Live Availability Check的CancelPolicy可能会返回Description信息，而Multiple Availability虽然接口定义有这个节点，但目前暂不支持返回值</p>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;AvailabilityRequest</span> <span class="na">xmlns=</span><span class="s">"http://www.derbysoft.com/doorway"</span> <span class="na">Password=</span><span class="s">"test"</span>
+ <span class="na">Token=</span><span class="s">"187be58c62c2f2515b5d78ee"</span> <span class="na">UserName=</span><span class="s">"Test"</span><span class="nt">&gt;</span> 
+  <span class="nt">&lt;AvailabilityCriteria</span> <span class="na">HotelCode=</span><span class="s">"IHG-BOMAP"</span> <span class="na">NumberOfUnits=</span><span class="s">"1"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;StayDateRange</span> <span class="na">CheckIn=</span><span class="s">"2015-10-11"</span> <span class="na">CheckOut=</span><span class="s">"2015-10-17"</span><span class="nt">/&gt;</span> 
+    <span class="nt">&lt;GuestCounts&gt;</span>
+      <span class="nt">&lt;GuestCount</span> <span class="na">AdultCount=</span><span class="s">"1"</span> <span class="na">ChildCount=</span><span class="s">"2"</span> <span class="na">ChildAges=</span><span class="s">"8,10"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;GuestCount</span> <span class="na">AdultCount=</span><span class="s">"2"</span> <span class="na">ChildCount=</span><span class="s">"1"</span> <span class="na">ChildAges=</span><span class="s">"11"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/GuestCounts&gt;</span> 
+  <span class="nt">&lt;/AvailabilityCriteria&gt;</span>
+<span class="nt">&lt;/AvailabilityRequest&gt;</span>
+</code></pre>
+<blockquote>
+<p>上述请求的应答</p>
+</blockquote>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;AvailabilityResponse</span> <span class="na">xmlns=</span><span class="s">"http://www.derbysoft.com/doorway"</span> 
+<span class="na">Status=</span><span class="s">"Successful"</span> <span class="na">Token=</span><span class="s">"187be58c62c2f2515b5d78ee"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Availabilities&gt;</span>
+    <span class="nt">&lt;Availability</span> <span class="na">CurrencyCode=</span><span class="s">"INR"</span> <span class="na">HotelCode=</span><span class="s">"IHG-BOMAP"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;GuestCount</span> <span class="na">AdultCount=</span><span class="s">"1"</span> <span class="na">ChildCount=</span><span class="s">"2"</span> <span class="na">ChildAges=</span><span class="s">"8,10"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;RoomTypes&gt;</span>
+        <span class="nt">&lt;RoomType</span> <span class="na">RoomTypeCode=</span><span class="s">"KDXN"</span> <span class="na">RoomTypeName=</span><span class="s">"1 KING SUPERIOR NONSMOKING"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;RoomTypeDescription&gt;</span>1 KING SUPERIOR NONSMOKING<span class="nt">&lt;/RoomTypeDescription&gt;</span>
+        <span class="nt">&lt;/RoomType&gt;</span>
+        <span class="nt">&lt;RoomType</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span> <span class="na">RoomTypeName=</span><span class="s">"DELUXE ROOM"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;RoomTypeDescription&gt;</span>DELUXE ROOM<span class="nt">&lt;/RoomTypeDescription&gt;</span>
+        <span class="nt">&lt;/RoomType&gt;</span>
+      <span class="nt">&lt;/RoomTypes&gt;</span>
+      <span class="nt">&lt;RatePlans&gt;</span>
+        <span class="nt">&lt;RatePlan</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RatePlanName=</span><span class="s">"IDH15"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;RatePlan</span> <span class="na">RatePlanCode=</span><span class="s">"IDU15"</span> <span class="na">RatePlanName=</span><span class="s">"IDU15"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;/RatePlans&gt;</span>
+      <span class="nt">&lt;RoomRates&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RoomTypeCode=</span><span class="s">"KDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8453.760"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7140.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-12"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8982.120"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7586.250"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-12"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"6843.520"</span> <span class="na">AmountBeforeTax=</span><span class="s">"5780.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDU15"</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"12580.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"10625.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10567.200"</span> <span class="na">AmountBeforeTax=</span><span class="s">"8925.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties&gt;</span>
+              <span class="nt">&lt;CancelPenalty</span> <span class="na">MaxHoursBeforeCheckIn=</span><span class="s">"48"</span> <span class="na">MinHoursBeforeCheckIn=</span><span class="s">"0"</span> 
+              <span class="na">Nights=</span><span class="s">"1"</span> <span class="na">NoShow=</span><span class="s">"false"</span> <span class="nt">/&gt;</span>
+              <span class="nt">&lt;CancelPenalty</span> <span class="na">Nights=</span><span class="s">"1"</span> <span class="na">NoShow=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;/CancelPenalties&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10064.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"8500.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-12"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10693.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"9031.250"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-12"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8453.760"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7140.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+      <span class="nt">&lt;/RoomRates&gt;</span>
+        <span class="nt">&lt;/Availability&gt;</span>
+        <span class="nt">&lt;Availability</span> <span class="na">CurrencyCode=</span><span class="s">"INR"</span> <span class="na">HotelCode=</span><span class="s">"IHG-BOMAP"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;GuestCount</span> <span class="na">AdultCount=</span><span class="s">"2"</span> <span class="na">ChildCount=</span><span class="s">"1"</span> <span class="na">ChildAges=</span><span class="s">"11"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;RoomTypes&gt;</span>
+        <span class="nt">&lt;RoomType</span> <span class="na">RoomTypeCode=</span><span class="s">"KDXN"</span> <span class="na">RoomTypeName=</span><span class="s">"1 KING SUPERIOR NONSMOKING"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;RoomTypeDescription&gt;</span>1 KING SUPERIOR NONSMOKING<span class="nt">&lt;/RoomTypeDescription&gt;</span>
+        <span class="nt">&lt;/RoomType&gt;</span>
+        <span class="nt">&lt;RoomType</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span> <span class="na">RoomTypeName=</span><span class="s">"DELUXE ROOM"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;RoomTypeDescription&gt;</span>DELUXE ROOM<span class="nt">&lt;/RoomTypeDescription&gt;</span>
+        <span class="nt">&lt;/RoomType&gt;</span>
+      <span class="nt">&lt;/RoomTypes&gt;</span>
+      <span class="nt">&lt;RatePlans&gt;</span>
+        <span class="nt">&lt;RatePlan</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RatePlanName=</span><span class="s">"IDH15"</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;RatePlan</span> <span class="na">RatePlanCode=</span><span class="s">"IDU15"</span> <span class="na">RatePlanName=</span><span class="s">"IDU15"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;/RatePlans&gt;</span>
+      <span class="nt">&lt;RoomRates&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RoomTypeCode=</span><span class="s">"KDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8453.760"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7140.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-12"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8982.120"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7586.250"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-12"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"6843.520"</span> <span class="na">AmountBeforeTax=</span><span class="s">"5780.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDU15"</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"12580.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"10625.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10567.200"</span> <span class="na">AmountBeforeTax=</span><span class="s">"8925.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties&gt;</span>
+              <span class="nt">&lt;CancelPenalty</span> <span class="na">MaxHoursBeforeCheckIn=</span><span class="s">"48"</span> <span class="na">MinHoursBeforeCheckIn=</span><span class="s">"0"</span> 
+              <span class="na">Nights=</span><span class="s">"1"</span> <span class="na">NoShow=</span><span class="s">"false"</span> <span class="nt">/&gt;</span>
+              <span class="nt">&lt;CancelPenalty</span> <span class="na">Nights=</span><span class="s">"1"</span> <span class="na">NoShow=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;/CancelPenalties&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>         
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+        <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"IDH15"</span> <span class="na">RoomTypeCode=</span><span class="s">"CDXN"</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;Rates&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10064.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"8500.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-11"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-12"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"10693.000"</span> <span class="na">AmountBeforeTax=</span><span class="s">"9031.250"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-12"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-16"</span> <span class="nt">/&gt;</span>
+            <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"8453.760"</span> <span class="na">AmountBeforeTax=</span><span class="s">"7140.000"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-16"</span> <span class="na">ExpireDate=</span><span class="s">"2015-10-17"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+          <span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"true"</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;CancelPenalties</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/CancelPolicy&gt;</span>
+          <span class="nt">&lt;Fees&gt;</span>
+            <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;/RoomRate&gt;</span>
+      <span class="nt">&lt;/RoomRates&gt;</span>
+    <span class="nt">&lt;/Availability&gt;</span>    
+    <span class="nt">&lt;/Availabilities&gt;</span>
+<span class="nt">&lt;/AvailabilityResponse&gt;</span>
+</code></pre><h3 id='405cb0a78a-3'>请求参数说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte）</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/AvailabilityRequest</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一id，由渠道传给Derby</td>
+</tr>
+<tr>
+<td>@UserName</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用于标识渠道的用户名</td>
+</tr>
+<tr>
+<td>@Password</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用户名对应的密码</td>
+</tr>
+<tr>
+<td>AvailabilityCriteria</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.@HotelCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>酒店的唯一ID</td>
+</tr>
+<tr>
+<td>.@NumberOfUnits</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>总的房间数量</td>
+</tr>
+<tr>
+<td>./StayDateRange</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>入住的日期区间</td>
+</tr>
+<tr>
+<td>..@CheckIn</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>入住日期，包含当天，格式为 yyyy-MM-dd</td>
+</tr>
+<tr>
+<td>..@CheckOut</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>离店日期，不包含当天，格式为yyyy-MM-dd</td>
+</tr>
+<tr>
+<td>./GuestCounts</td>
+<td>1</td>
+<td>List</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>../GuestCount</td>
+<td>1.n</td>
+<td>Object</td>
+<td></td>
+<td>每间房入住人信息</td>
+</tr>
+<tr>
+<td>...@AdultCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的成人数量</td>
+</tr>
+<tr>
+<td>...@ChildCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的小孩数量</td>
+</tr>
+<tr>
+<td>...@ChildAges</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>小孩年龄，多个小孩年龄用英文逗号（,）分隔，并且和小孩数量是对应的。如果小孩数量大于零，则小孩年龄一定不能为空。</td>
+</tr>
+</tbody></table>
+<h3 id='b302a98fa6-4'>返回字段说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte）</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/AvailabilityResponse</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一id</td>
+</tr>
+<tr>
+<td>@Status</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>此次请求的状态，只能为[ &#39;Successful&#39; or &#39;Failed&#39; ]</td>
+</tr>
+<tr>
+<td>/Availabilities</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>./Availability</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>..@CurrencyCode</td>
+<td>1</td>
+<td>String</td>
+<td>3</td>
+<td>标识货币的唯一ID，遵循 ISO 4217</td>
+</tr>
+<tr>
+<td>..@HotelCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>酒店的唯一标识ID。</td>
+</tr>
+<tr>
+<td>../GuestCount</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>每间房的入住人信息，跟请求中的入住人信息相对应</td>
+</tr>
+<tr>
+<td>...@AdultCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的成人数量</td>
+</tr>
+<tr>
+<td>...@ChildCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的小孩数量</td>
+</tr>
+<tr>
+<td>...@ChildAges</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>小孩年龄，多个小孩年龄用英文逗号（,）分隔，并且和小孩数量是对应的。如果小孩数量大于零，则小孩年龄一定不会为空。</td>
+</tr>
+<tr>
+<td>../RoomTypes</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.../RoomType</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>标识一个房型列表</td>
+</tr>
+<tr>
+<td>....@RoomTypeCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>房型唯一ID</td>
+</tr>
+<tr>
+<td>....@RoomTypeName</td>
+<td>0.1</td>
+<td>String</td>
+<td>256</td>
+<td>房型名称</td>
+</tr>
+<tr>
+<td>..../RoomTypeDescription</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>房型描述信息</td>
+</tr>
+<tr>
+<td>../RatePlans</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.../RatePlan</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>标识一个价格计划列表</td>
+</tr>
+<tr>
+<td>....@RatePlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>价格计划ID</td>
+</tr>
+<tr>
+<td>....@RatePlanName</td>
+<td>0.1</td>
+<td>String</td>
+<td>256</td>
+<td>价格计划名称</td>
+</tr>
+<tr>
+<td>...../RatePlanDescription</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>价格计划描述信息</td>
+</tr>
+<tr>
+<td>..../CancelPolicy</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消政策（<strong>这是已经废弃的节点，为兼容旧的渠道保留，新开发的渠道请不要使用</strong>）</td>
+</tr>
+<tr>
+<td>....@NonRefundable</td>
+<td>1</td>
+<td>Boolean</td>
+<td></td>
+<td>表示是否不可取消且不退款</td>
+</tr>
+<tr>
+<td>...../Description</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>取消政策的描述信息，只会在SingleAvail中出现。</td>
+</tr>
+<tr>
+<td>...../CancelPenalties</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消惩罚政策</td>
+</tr>
+<tr>
+<td>....../CancelPenalty</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表取消惩罚政策的列表。</td>
+</tr>
+<tr>
+<td>.......@MinHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最小时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>.......@MaxHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最大时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>.......@Deadline</td>
+<td>0.1</td>
+<td>String</td>
+<td>8</td>
+<td>表示最迟入住的时间点，过了这个时间点就视为NoShow，格式示例为 12AM, 4:30PM.</td>
+</tr>
+<tr>
+<td>.......@Nights</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示罚款的间夜数，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@Price</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款的金额，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款相对于当次入住总金额的百分比，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@NoShow</td>
+<td>0.1</td>
+<td>Boolean</td>
+<td></td>
+<td>是否为NoShow的惩罚，当NoShow为True时，MinHoursBeforeCheckIn 和MaxHoursBeforeCheckIn为空。</td>
+</tr>
+<tr>
+<td>../RoomRates</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.../RoomRate</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表具体房型的相关价格信息的列表</td>
+</tr>
+<tr>
+<td>....@RoomTypeCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>房型的唯一ID</td>
+</tr>
+<tr>
+<td>....@RatePlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>价格计划的唯一ID</td>
+</tr>
+<tr>
+<td>....@MealPlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>8</td>
+<td>含餐信息的唯一ID, 详细含餐ID列表请见附录</td>
+</tr>
+<tr>
+<td>..../Rates</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>...../Rate</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表此房型在此价格计划以及含餐信息下的具体价格信息列表</td>
+</tr>
+<tr>
+<td>......@EffectiveDate</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>价格信息的有效时间，这个日期是包含的。</td>
+</tr>
+<tr>
+<td>......@ExpireDate</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>价格信息的无效时间，这个日期是不包含的。</td>
+</tr>
+<tr>
+<td>......@AmountBeforeTax</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>税前价</td>
+</tr>
+<tr>
+<td>......@AmountAfterTax</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>税后价</td>
+</tr>
+<tr>
+<td>......@ExtraPersonCharge</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>每加一个人需要收取的额外的税前费用，详见附录。</td>
+</tr>
+<tr>
+<td>......@ExtraPersonChargeAfterTax</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>每加一个人需要收取的额外的税后费用，详见附录。</td>
+</tr>
+<tr>
+<td>..../Fees</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>税规则，详细例子请见附录。</td>
+</tr>
+<tr>
+<td>...../Fee</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>详细税规则列表</td>
+</tr>
+<tr>
+<td>......@ChargeType</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>表示税规则的名称，如CityFee（城市税）或ServiceCharge（服务税）等。</td>
+</tr>
+<tr>
+<td>......@Type</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>[ Inclusive, Exclusive, Cumulative ]，表示此税是否已经包含在了上面（/Rates 节点）的价格内。</td>
+</tr>
+<tr>
+<td>......@EffectiveDate</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>税规则的生效时间，当天是包含在内的，一定与EffectiveDate一起出现或不出现。格式为yyyy-MM-dd，示例：2017-01-01</td>
+</tr>
+<tr>
+<td>......@ExpireDate</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>税规则的失效时间，当天是不包含在内的，一定与ExpireDate一起出现或不出现。格式为yyyy-MM-dd，示例：2017-01-09</td>
+</tr>
+<tr>
+<td>......@Unit</td>
+<td>0.1</td>
+<td>Enum</td>
+<td></td>
+<td>[ PER_ROOM_PER_NIGHT, PER_PERSON_PER_NIGHT, PER_ROOM_PER_STAY,  PER_PERSON_PER_STAY ] 表示税规则的单位，如果Amount不为空的时候，此值一定不会为空，反之此值可能为空。</td>
+</tr>
+<tr>
+<td>......@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>收取税的比例，当Amount为空的时候，此值一定不为空。不与@Amount同时存在。</td>
+</tr>
+<tr>
+<td>......@Amount</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>收取税的具体金额，当Percent为空的时候，此值一定不为空。不与@Percent同时存在。</td>
+</tr>
+<tr>
+<td>..../CancelPolicy</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消政策</td>
+</tr>
+<tr>
+<td>....@NonRefundable</td>
+<td>1</td>
+<td>Boolean</td>
+<td></td>
+<td>表示是否不可取消且不退款</td>
+</tr>
+<tr>
+<td>...../Description</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>取消政策的描述信息，只会在SingleAvail中出现。</td>
+</tr>
+<tr>
+<td>...../CancelPenalties</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消惩罚政策</td>
+</tr>
+<tr>
+<td>....../CancelPenalty</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表取消惩罚政策的列表</td>
+</tr>
+<tr>
+<td>.......@MinHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最小时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>.......@MaxHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最大时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>.......@Deadline</td>
+<td>0.1</td>
+<td>String</td>
+<td>8</td>
+<td>表示最迟入住的时间点，格式示例为 12AM, 4:30PM.</td>
+</tr>
+<tr>
+<td>.......@Nights</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示罚款的间夜数，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@Price</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款的金额，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款相对于当次入住总金额的百分比，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.......@NoShow</td>
+<td>0.1</td>
+<td>Boolean</td>
+<td></td>
+<td>是否为NoShow的惩罚，当NoShow为True时，MinHoursBeforeCheckIn 和MaxHoursBeforeCheckIn为空。</td>
+</tr>
+</tbody></table>
+<h2 id='reservation'>下单（Reservation）</h2>
+<ul>
+<li>URL - https://go.derbysoftca.com/go/xml/reservation/yourusername/</li>
+<li>Method - POST</li>
+</ul>
+
+<aside class="info">
+
+渠道调用此接口来实现下单的功能。单次预定请求包含具体的酒店，预定的房间数量（支持同时预定多间房），价格计划和特定的房型，以及入住的时间段，客人信息，联系人信息等，支持信用卡传输。请求返回中会包含具体的确认信息以及最终确认价格。
+
+目前的限制：
+ * 我们暂时不支持同时多酒店多房型或者多个价格计划的预定。
+ * 我们暂时不支持订单重试，这里特指使用同一个渠道订单号下单多次。
+ * 我们的请求返回中可能会有额外的价格信息，包含取消政策，税规则等，但这不是一定会返回的. 
+ * 所有订单请求均为同步处理模式，如果响应时间较长，此次请求会阻塞或者超时，Derby每个接口有自己的超时时间，渠道也可根据自己的需求实现自己的超时策略，但不要大于Derby的超时时间。详见：**Derby接口超时时间**。
+    
+</aside>
+     
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;ReservationRequest</span> <span class="na">xmlns=</span><span class="s">"http://www.derbysoft.com/doorway"</span> <span class="na">Password=</span><span class="s">"ReallyCoolJoe"</span> 
+<span class="na">ResActionType=</span><span class="s">"Book"</span> <span class="na">Token=</span><span class="s">"28546a32-9495-4781-8de8-77a674c0b51a"</span> <span class="na">UserName=</span><span class="s">"CoolJoe"</span> 
+<span class="na">IATA=</span><span class="s">"555555556"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Reservation</span> <span class="na">DistributorReservationId=</span><span class="s">"R449838380"</span> <span class="na">HotelCode=</span><span class="s">"CHIRC"</span> 
+  <span class="na">NumberOfUnits=</span><span class="s">"1"</span> <span class="na">RatePlanCode=</span><span class="s">"49584IPRTF"</span> <span class="na">RoomTypeCode=</span><span class="s">"QNQN"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;StayDateRange</span> <span class="na">CheckIn=</span><span class="s">"2015-10-30"</span> <span class="na">CheckOut=</span><span class="s">"2015-11-01"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;GuestCount</span> <span class="na">AdultCount=</span><span class="s">"2"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;ContactPerson</span> <span class="na">Address=</span><span class="s">"1000 Cool Dr"</span> <span class="na">City=</span><span class="s">"Atlanta"</span> <span class="na">CountryCode=</span><span class="s">"US"</span> 
+    <span class="na">Email=</span><span class="s">"cool.guy@cool.com"</span> <span class="na">GivenName=</span><span class="s">"Cool"</span> <span class="na">StateCode=</span><span class="s">"GA"</span> <span class="na">Surname=</span><span class="s">"Guy"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;PaymentCard</span> <span class="na">CardCode=</span><span class="s">"VI"</span> <span class="na">CardNumber=</span><span class="s">"4111111111111111"</span> 
+    <span class="na">ExpireDate=</span><span class="s">"0918"</span> <span class="na">HolderName=</span><span class="s">"Cool Guy"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;Guests&gt;</span>
+      <span class="nt">&lt;Guest</span> <span class="na">GivenName=</span><span class="s">"Cool"</span> <span class="na">RoomIndex=</span><span class="s">"1"</span> <span class="na">Surname=</span><span class="s">"Guy"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;Guest</span> <span class="na">GivenName=</span><span class="s">"TBD"</span> <span class="na">RoomIndex=</span><span class="s">"1"</span> <span class="na">Surname=</span><span class="s">"TBD"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/Guests&gt;</span>
+    <span class="nt">&lt;Comments&gt;</span>
+      <span class="nt">&lt;Comment&gt;</span>non-smoking please<span class="nt">&lt;/Comment&gt;</span>
+    <span class="nt">&lt;/Comments&gt;</span>
+  <span class="nt">&lt;/Reservation&gt;</span>
+<span class="nt">&lt;/ReservationRequest&gt;</span>
+</code></pre>
+<blockquote>
+<p>上述请求的应答</p>
+</blockquote>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;ReservationResponse</span> <span class="na">xmlns=</span><span class="s">"http://www.derbysoft.com/doorway"</span> 
+<span class="na">Status=</span><span class="s">"Successful"</span> <span class="na">Token=</span><span class="s">"28546a32-9495-4781-8de8-77a674c0b51a"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;ReservationId</span> <span class="na">DerbysoftReservationId=</span><span class="s">"DFA280221G104J"</span> 
+  <span class="na">DistributorReservationId=</span><span class="s">"R449838380"</span> <span class="na">HotelReservationId=</span><span class="s">"5828044"</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;RoomRates&gt;</span>
+    <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"49584IPRTF"</span> <span class="na">RoomTypeCode=</span><span class="s">"QNQN"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;Rates&gt;</span>
+        <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"179.54"</span> <span class="na">AmountBeforeTax=</span><span class="s">"152.15"</span> 
+        <span class="na">EffectiveDate=</span><span class="s">"2015-10-30"</span> <span class="na">ExpireDate=</span><span class="s">"2015-11-01"</span> <span class="nt">/&gt;</span>
+      <span class="nt">&lt;/Rates&gt;</span>
+      <span class="nt">&lt;Fees&gt;</span>
+        <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+      <span class="nt">&lt;/Fees&gt;</span>
+    <span class="nt">&lt;/RoomRate&gt;</span>
+  <span class="nt">&lt;/RoomRates&gt;</span>
+<span class="nt">&lt;Total</span> <span class="na">AmountAfterTax=</span><span class="s">"359.07"</span> <span class="na">AmountBeforeTax=</span><span class="s">"304.300"</span> <span class="na">CurrencyCode=</span><span class="s">"USD"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/ReservationResponse&gt;</span>
+</code></pre><h3 id='405cb0a78a-4'>请求参数说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte）</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/ReservationRequest</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一ID，由渠道传给Derby</td>
+</tr>
+<tr>
+<td>@UserName</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用于标识渠道的用户名</td>
+</tr>
+<tr>
+<td>@Password</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用户名对应的密码</td>
+</tr>
+<tr>
+<td>@ResActionType</td>
+<td>1</td>
+<td>Enum</td>
+<td>64</td>
+<td>预定的策略类型，目前只支持 <strong>Book</strong></td>
+</tr>
+<tr>
+<td>@IATA</td>
+<td>0.1</td>
+<td>String</td>
+<td>64</td>
+<td>下单时标识渠道的唯一ID</td>
+</tr>
+<tr>
+<td>/Reservation</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>订单相关信息</td>
+</tr>
+<tr>
+<td>.@HotelCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>标识一个酒店的唯一ID</td>
+</tr>
+<tr>
+<td>.@DistributorReservationId</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>渠道订单号，渠道应该保证此订单号唯一，相同的渠道订单号可能会被认为是同一张订单而导致重复订单问题。</td>
+</tr>
+<tr>
+<td>.@NumberOfUnits</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>预订的房间数量</td>
+</tr>
+<tr>
+<td>.@RoomTypeCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>预订的房间唯一ID</td>
+</tr>
+<tr>
+<td>.@RatePlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>含餐信息的唯一ID</td>
+</tr>
+<tr>
+<td>./StayDateRange</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>入住的日期区间</td>
+</tr>
+<tr>
+<td>..@CheckIn</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>入住日期，当天是包含的，格式为 yyyy-MM-dd</td>
+</tr>
+<tr>
+<td>..@CheckOut</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>离店日期，当天是不包含的。格式为yyyy-MM-dd</td>
+</tr>
+<tr>
+<td>./GuestCount</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>入住人统计信息</td>
+</tr>
+<tr>
+<td>..@AdultCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的成人数量</td>
+</tr>
+<tr>
+<td>..@ChildCount</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的小孩数量</td>
+</tr>
+<tr>
+<td>..@ChildAges</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>小孩年龄，多个小孩年龄用英文逗号（,）分隔，并且和小孩数量是对应的。如果小孩数量大于零，则小孩年龄一定不能为空。</td>
+</tr>
+<tr>
+<td>./ContactPerson</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>联系人信息</td>
+</tr>
+<tr>
+<td>..@GivenName</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>此联系人的名</td>
+</tr>
+<tr>
+<td>..@Surname</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>此联系人的姓</td>
+</tr>
+<tr>
+<td>..@CountryCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>此联系人所在的国家代码</td>
+</tr>
+<tr>
+<td>..@StateCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>此联系人所在的地区代码</td>
+</tr>
+<tr>
+<td>..@City</td>
+<td>0.1</td>
+<td>String</td>
+<td>128</td>
+<td>此联系人所在的城市</td>
+</tr>
+<tr>
+<td>..@Address</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>此联系人所在的街道</td>
+</tr>
+<tr>
+<td>..@Email</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>此联系人的邮箱地址</td>
+</tr>
+<tr>
+<td>..@Telephone</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>此联系人的移动联系方式</td>
+</tr>
+<tr>
+<td>./PaymentCard</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>信用卡信息</td>
+</tr>
+<tr>
+<td>..@CardCode</td>
+<td>1</td>
+<td>Enum</td>
+<td>2</td>
+<td>信用卡类型，如 VI, MC, AX etc. 具体请参阅附录</td>
+</tr>
+<tr>
+<td>..@CardNumber</td>
+<td>1</td>
+<td>String</td>
+<td>20</td>
+<td>信用卡卡号。</td>
+</tr>
+<tr>
+<td>..@HolderName</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>持卡人姓名</td>
+</tr>
+<tr>
+<td>..@ExpireDate</td>
+<td>1</td>
+<td>String</td>
+<td>4</td>
+<td>信用卡过期时间，格式为 MMYY.</td>
+</tr>
+<tr>
+<td>./Guests</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>所有入住的客人信息</td>
+</tr>
+<tr>
+<td>../Guest</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>表示多个客人详细信息的列表</td>
+</tr>
+<tr>
+<td>...@GivenName</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>客人的名</td>
+</tr>
+<tr>
+<td>...@Surname</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>客人的姓</td>
+</tr>
+<tr>
+<td>...@RoomIndex</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示此客人会入住第几间房间，具体逻辑请参阅附录</td>
+</tr>
+<tr>
+<td>...@CountryCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>客人的国家代码</td>
+</tr>
+<tr>
+<td>...@StateCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>客人所在的地区代码</td>
+</tr>
+<tr>
+<td>...@City</td>
+<td>0.1</td>
+<td>String</td>
+<td>128</td>
+<td>客人所在的城市</td>
+</tr>
+<tr>
+<td>...@Address</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>客人所在的街道</td>
+</tr>
+<tr>
+<td>...@Email</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>客人的邮箱地址</td>
+</tr>
+<tr>
+<td>...@Telephone</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>客人的移动联系方式</td>
+</tr>
+<tr>
+<td>./Comments</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>此订单的备注</td>
+</tr>
+<tr>
+<td>../Comment</td>
+<td>1.n</td>
+<td>String</td>
+<td>128</td>
+<td>一个订单可能有多个备注，需要注意的是我们<strong>可能</strong>会将备注截断以符合酒店供应商的限制。DerbySoft may cut your comments to fit supplier&#39;s limitation.</td>
+</tr>
+</tbody></table>
+<h3 id='b302a98fa6-5'>返回字段说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte）</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/ReservationResponse</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一ID</td>
+</tr>
+<tr>
+<td>@Status</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>此次请求的状态，只能为[ &#39;Successful&#39; or &#39;Failed&#39; ]</td>
+</tr>
+<tr>
+<td>/ReservationId</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.@DistributorReservationId</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>渠道订单号，渠道应该保证此订单号唯一，相同的渠道订单号可能会被认为是同一张订单而导致重复订单问题。</td>
+</tr>
+<tr>
+<td>.@DerbysoftReservationId</td>
+<td>1</td>
+<td>String</td>
+<td>32</td>
+<td>Derby订单号，此订单号由德比生成并返回给渠道，可用此订单号进行订单查询</td>
+</tr>
+<tr>
+<td>.@HotelReservationId</td>
+<td>1</td>
+<td>String</td>
+<td>256</td>
+<td>酒店订单号，当订单被成功确认的时候酒店会返回此订单号。</td>
+</tr>
+<tr>
+<td>/RoomRates</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>./RoomRate</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表具体房型的相关价格信息的列表</td>
+</tr>
+<tr>
+<td>..@RoomTypeCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>房型的唯一ID</td>
+</tr>
+<tr>
+<td>..@RatePlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>价格计划的唯一ID</td>
+</tr>
+<tr>
+<td>..@MealPlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>8</td>
+<td>含餐信息的唯一ID, 详细含餐ID列表请见附录</td>
+</tr>
+<tr>
+<td>../Rates</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.../Rate</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>代表此房型在此价格计划以及含餐信息下的具体价格信息</td>
+</tr>
+<tr>
+<td>....@EffectiveDate</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>价格信息的有效时间，这个日期是包含的。</td>
+</tr>
+<tr>
+<td>....@ExpireDate</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>价格信息的无效时间，这个日期是不包含的。</td>
+</tr>
+<tr>
+<td>....@AmountBeforeTax</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>税前价</td>
+</tr>
+<tr>
+<td>....@AmountAfterTax</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>税后价</td>
+</tr>
+<tr>
+<td>....@ExtraPersonCharge</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>每加一个人需要收取的额外的税前费用，详见附录。</td>
+</tr>
+<tr>
+<td>....@ExtraPersonChargeAfterTax</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>每加一个人需要收取的额外的税后费用，详见附录。</td>
+</tr>
+<tr>
+<td>../Fees</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>税规则，详细例子请见附录。</td>
+</tr>
+<tr>
+<td>.../Fee</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>详细税规则列表</td>
+</tr>
+<tr>
+<td>....@ChargeType</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>表示税规则的名称，如CityFee（城市税）或ServiceCharge（服务税）等。</td>
+</tr>
+<tr>
+<td>....@Type</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>[ Inclusive, Exclusive, Cumulative ]，表示此税是否已经包含在了上面（/Rates 节点）的价格内。</td>
+</tr>
+<tr>
+<td>....@EffectiveDate</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>税规则的生效时间，当天是包含在内的，一定与EffectiveDate一起出现或不出现。格式为yyyy-MM-dd，示例：2017-01-01</td>
+</tr>
+<tr>
+<td>....@ExpireDate</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>税规则的失效时间，当天是不包含在内的，一定与ExpireDate一起出现或不出现。格式为yyyy-MM-dd，示例：2017-01-09</td>
+</tr>
+<tr>
+<td>....@Unit</td>
+<td>0.1</td>
+<td>Enum</td>
+<td></td>
+<td>[ PER_ROOM_PER_NIGHT, PER_PERSON_PER_NIGHT, PER_ROOM_PER_STAY,  PER_PERSON_PER_STAY ] 表示税规则的单位，如果Amount不为空的时候，此值一定不会为空，反之此值可能为空。</td>
+</tr>
+<tr>
+<td>....@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>收取税的比例，当Amount为空的时候，此值一定不为空。不与@Amount同时存在。</td>
+</tr>
+<tr>
+<td>....@Amount</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>收取税的具体金额，当Percent为空的时候，此值一定不为空。不与@Percent同时存在。</td>
+</tr>
+<tr>
+<td>../CancelPolicy</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消政策</td>
+</tr>
+<tr>
+<td>..@NonRefundable</td>
+<td>1</td>
+<td>Boolean</td>
+<td></td>
+<td>表示是否不可取消且不退款</td>
+</tr>
+<tr>
+<td>.../Description</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>取消政策的描述信息，只会在SingleAvail中出现。</td>
+</tr>
+<tr>
+<td>.../CancelPenalties</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消惩罚政策</td>
+</tr>
+<tr>
+<td>..../CancelPenalty</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表取消惩罚政策的列表</td>
+</tr>
+<tr>
+<td>.....@MinHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最小时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>.....@MaxHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最大时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>.....@Deadline</td>
+<td>0.1</td>
+<td>String</td>
+<td>8</td>
+<td>表示最迟入住的时间点，格式示例为 12AM, 4:30PM.</td>
+</tr>
+<tr>
+<td>.....@Nights</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示罚款的间夜数，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.....@Price</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款的金额，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.....@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款相对于当次入住总金额的百分比，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>.....@NoShow</td>
+<td>0.1</td>
+<td>Boolean</td>
+<td></td>
+<td>是否为NoShow的惩罚，当NoShow为True时，MinHoursBeforeCheckIn 和MaxHoursBeforeCheckIn为空。</td>
+</tr>
+<tr>
+<td>/Total</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td>此订单的总价</td>
+</tr>
+<tr>
+<td>.@CurrencyCode</td>
+<td>1</td>
+<td>String</td>
+<td>3</td>
+<td>标识货币的唯一ID，遵循 ISO 4217</td>
+</tr>
+<tr>
+<td>.@AmountBeforeTax</td>
+<td>1</td>
+<td>Double</td>
+<td>32</td>
+<td>此订单的税前总价</td>
+</tr>
+<tr>
+<td>.@AmountAfterTax</td>
+<td>1</td>
+<td>Double</td>
+<td>32</td>
+<td>此订单的税后总价</td>
+</tr>
+</tbody></table>
+<h2 id='cancellation'>订单取消（Cancellation）</h2>
+<ul>
+<li>URL - https://go.derbysoftca.com/go/xml/cancel/yourusername/</li>
+<li>Method - POST</li>
+</ul>
+
+<p>取消订单接口用于将已经预定成功的订单取消。一张订单只能取消一次，重复取消或者取消失败的订都单会返回错误。</p>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;CancelRequest</span> <span class="na">xmlns=</span><span class="s">"http://www.derbysoft.com/doorway"</span> <span class="na">Password=</span><span class="s">"CoolJoe"</span> 
+<span class="na">Token=</span><span class="s">"967d78e9-d3f9-4f85-bc84-2ee5f829166f"</span> <span class="na">UserName=</span><span class="s">"CoolJoe"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;ReservationId</span> <span class="na">DerbysoftReservationId=</span><span class="s">"DF9041318LR004"</span> 
+  <span class="na">DistributorReservationId=</span><span class="s">"R11475594"</span> 
+    <span class="na">HotelReservationId=</span><span class="s">"31600633"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/CancelRequest&gt;</span>
+
+</code></pre>
+<blockquote>
+<p>上述请求的应答</p>
+</blockquote>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;CancelResponse</span> <span class="na">xmlns=</span><span class="s">"http://www.derbysoft.com/doorway"</span> 
+  <span class="na">HotelCancelConfirmId=</span><span class="s">"XVJ3BBS"</span> <span class="na">Status=</span><span class="s">"Successful"</span> 
+  <span class="na">Token=</span><span class="s">"967d78e9-d3f9-4f85-bc84-2ee5f829166f"</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/CancelResponse&gt;</span>
+
+</code></pre><h3 id='405cb0a78a-5'>请求参数说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte）</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/CancelRequest</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一ID，由渠道传给Derby</td>
+</tr>
+<tr>
+<td>@UserName</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用于标识渠道的用户名</td>
+</tr>
+<tr>
+<td>@Password</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用户名对应的密码</td>
+</tr>
+<tr>
+<td>/ReservationId</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>德比软件会首先使用德比订单号来查询此订单，如果查询不到则使用渠道订单号来查询，查询到订单后执行后续取消动作。</td>
+</tr>
+<tr>
+<td>.@DerbysoftReservationId</td>
+<td>1</td>
+<td>String</td>
+<td>32</td>
+<td>德比订单号，此字段必填</td>
+</tr>
+<tr>
+<td>.@DistributorReservationId</td>
+<td>0.1</td>
+<td>String</td>
+<td>64</td>
+<td>渠道订单号，渠道应该保证此订单号唯一</td>
+</tr>
+<tr>
+<td>.@HotelReservationId</td>
+<td>0.1</td>
+<td>String</td>
+<td>256</td>
+<td>酒店订单号，酒店供应商会保证此订单号唯一</td>
+</tr>
+</tbody></table>
+<h3 id='b302a98fa6-6'>返回字段说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte）</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/CancelResponse</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一ID</td>
+</tr>
+<tr>
+<td>@Status</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>此次请求的状态，只能为[ &#39;Successful&#39; or &#39;Failed&#39; ]</td>
+</tr>
+<tr>
+<td>@HotelCancelConfirmId</td>
+<td>0.1</td>
+<td>String</td>
+<td>256</td>
+<td>酒店端取消确认号。返回此确认号代表取消成功，否则会返回具体的取消失败原因，参见 ErrorResponse</td>
+</tr>
+</tbody></table>
+<h2 id='query-reservation'>订单查询（Query Reservation）</h2>
+<ul>
+<li>URL - https://go.derbysoftca.com/go/xml/queryreservation/yourusername</li>
+<li>Method - POST</li>
+</ul>
+
+<p>查询订单接口，用于渠道确认订单的状态，此接口也可能会返回订单详细信息，如预定的房间数，客人信息，价格，取消政策等。</p>
+
+<aside class="notice">
+
+ 1. 需要注意的是这里查询到的信息目前只是订单在Derby的状态，暂不支持查询在酒店供应商系统中的状态。
+ 2. 此接口的目的是为了防止渠道端由于网络超时或者其他原因没有收到订单确认，但是订单在德比和酒店端确认成功了的情况。这时候渠道可以调用此接口来查询订单在德比系统中的状态。
+ 
+</aside>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;QueryReservationRequest</span> <span class="na">Password=</span><span class="s">"CoolJoe"</span> <span class="na">Token=</span><span class="s">"967d78e9-d3f9-4f85-bc84-2ee5f829166f"</span> 
+<span class="na">UserName=</span><span class="s">"CoolJoe"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;ReservationId</span> <span class="na">DerbysoftReservationId=</span><span class="s">"DF9041318LR004"</span> 
+  <span class="na">DistributorReservationId=</span><span class="s">"R11475594"</span> <span class="na">HotelReservationId=</span><span class="s">"31600633"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/QueryReservationRequest&gt;</span>
+</code></pre>
+<blockquote>
+<p>上述请求的应答</p>
+</blockquote>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;QueryReservationResponse</span> <span class="na">Status=</span><span class="s">"Successful"</span> 
+<span class="na">Token=</span><span class="s">"28546a32-9495-4781-8de8-77a674c0b51a"</span> <span class="na">IATA=</span><span class="s">"555555556"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Reservation</span> <span class="na">NumberOfUnits=</span><span class="s">"1"</span>  <span class="na">RatePlanCode=</span><span class="s">"49584IPRTF"</span> <span class="na">RoomTypeCode=</span><span class="s">"QNQN"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;HotelCode&gt;</span>CHIRC<span class="nt">&lt;/HotelCode&gt;</span>
+    <span class="nt">&lt;StayDateRange</span> <span class="na">CheckIn=</span><span class="s">"2015-10-30"</span> <span class="na">CheckOut=</span><span class="s">"2015-11-01"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;GuestCount</span> <span class="na">AdultCount=</span><span class="s">"2"</span> <span class="na">ChildCount=</span><span class="s">"0"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;ContactPerson</span> <span class="na">Address=</span><span class="s">"1000 Cool Dr"</span> <span class="na">City=</span><span class="s">"Atlanta"</span> <span class="na">CountryCode=</span><span class="s">"US"</span> 
+    <span class="na">Email=</span><span class="s">"cool.guy@cool.com"</span> <span class="na">GivenName=</span><span class="s">"Cool"</span> <span class="na">StateCode=</span><span class="s">"GA"</span> <span class="na">Surname=</span><span class="s">"Guy"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;Guests&gt;</span>
+      <span class="nt">&lt;Guest</span> <span class="na">GivenName=</span><span class="s">"Cool"</span> <span class="na">RoomIndex=</span><span class="s">"1"</span> <span class="na">Surname=</span><span class="s">"Guy"</span> <span class="nt">/&gt;</span>
+      <span class="nt">&lt;Guest</span> <span class="na">GivenName=</span><span class="s">"TBD"</span> <span class="na">RoomIndex=</span><span class="s">"1"</span> <span class="na">Surname=</span><span class="s">"TBD"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/Guests&gt;</span>
+    <span class="nt">&lt;Comments&gt;</span>
+      <span class="nt">&lt;Comment&gt;</span>non-smoking please<span class="nt">&lt;/Comment&gt;</span>
+    <span class="nt">&lt;/Comments&gt;</span>
+    <span class="nt">&lt;RoomRates&gt;</span>
+      <span class="nt">&lt;RoomRate</span> <span class="na">MealPlanCode=</span><span class="s">"RO"</span> <span class="na">RatePlanCode=</span><span class="s">"49584IPRTF"</span> <span class="na">RoomTypeCode=</span><span class="s">"QNQN"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;Rates&gt;</span>
+          <span class="nt">&lt;Rate</span> <span class="na">AmountAfterTax=</span><span class="s">"179.54"</span> <span class="na">AmountBeforeTax=</span><span class="s">"152.15"</span> 
+            <span class="na">EffectiveDate=</span><span class="s">"2015-10-30"</span> <span class="na">ExpireDate=</span><span class="s">"2015-11-01"</span> <span class="nt">/&gt;</span>
+          <span class="nt">&lt;/Rates&gt;</span>
+        <span class="nt">&lt;Fees&gt;</span>
+          <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Tax"</span> <span class="na">Percent=</span><span class="s">"18.400"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;/Fees&gt;</span>
+        <span class="nt">&lt;CancelPolicy&gt;</span>
+          <span class="nt">&lt;CancelPenalties&gt;</span>
+            <span class="nt">&lt;CancelPenalty</span> <span class="na">Deadline=</span><span class="s">"4PM"</span> <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Percent=</span><span class="s">"100"</span><span class="nt">/&gt;</span>
+            <span class="nt">&lt;CancelPenalty</span> <span class="na">NoShow=</span><span class="s">"true"</span> <span class="na">Percent=</span><span class="s">"100"</span><span class="nt">/&gt;</span>
+          <span class="nt">&lt;/CancelPenalties&gt;</span>
+        <span class="nt">&lt;/CancelPolicy&gt;</span>
+      <span class="nt">&lt;/RoomRate&gt;</span>
+    <span class="nt">&lt;/RoomRates&gt;</span>
+    <span class="nt">&lt;Total</span> <span class="na">AmountAfterTax=</span><span class="s">"359.07"</span> <span class="na">AmountBeforeTax=</span><span class="s">"304.300"</span> <span class="na">CurrencyCode=</span><span class="s">"USD"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;ReservationId</span> <span class="na">DerbysoftReservationId=</span><span class="s">"DFA280221G104J"</span> 
+    <span class="na">DistributorReservationId=</span><span class="s">"R449838380"</span> <span class="na">HotelReservationId=</span><span class="s">"5828044"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;ReservationStatus</span> <span class="na">ResStatus=</span><span class="s">"Success"</span> <span class="na">CancelStatus=</span><span class="s">"None"</span> <span class="nt">/&gt;</span>
+  <span class="nt">&lt;/Reservation&gt;</span>
+<span class="nt">&lt;/QueryReservationResponse&gt;</span>
+</code></pre><h3 id='405cb0a78a-6'>请求参数说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte）</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/QueryReservationRequest</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一ID，由渠道传给Derby</td>
+</tr>
+<tr>
+<td>@UserName</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用于标识渠道的用户名</td>
+</tr>
+<tr>
+<td>@Password</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>用户名对应的密码</td>
+</tr>
+<tr>
+<td>/ReservationId</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>.@DerbysoftReservationId</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>德比订单号，此字段必填</td>
+</tr>
+<tr>
+<td>.@DistributorReservationId</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>渠道订单号，渠道应该保证此订单号唯一</td>
+</tr>
+<tr>
+<td>.@HotelReservationId</td>
+<td>0.1</td>
+<td>String</td>
+<td>256</td>
+<td>酒店订单号，酒店供应商会保证此订单号唯一</td>
+</tr>
+</tbody></table>
+<h3 id='b302a98fa6-7'>返回字段说明</h3>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte）</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/QueryReservationResponse</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一ID</td>
+</tr>
+<tr>
+<td>@Status</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>此次请求的状态，只能为[ &#39;Successful&#39; or &#39;Failed&#39; ]</td>
+</tr>
+<tr>
+<td>@IATA</td>
+<td>0.1</td>
+<td>String</td>
+<td>64</td>
+<td>下单时标识渠道的唯一ID</td>
+</tr>
+<tr>
+<td>/Reservation</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>./HotelCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>渠道酒店号</td>
+</tr>
+<tr>
+<td>.@NumberOfUnits</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>预定的房间数量</td>
+</tr>
+<tr>
+<td>.@RoomTypeCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>订单中预定的房间号</td>
+</tr>
+<tr>
+<td>.@RatePlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>订单中预定的价格计划</td>
+</tr>
+<tr>
+<td>./StayDateRange</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>入住的日期区间</td>
+</tr>
+<tr>
+<td>..@CheckIn</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>入住日期，当天是包含的，格式为 yyyy-MM-dd</td>
+</tr>
+<tr>
+<td>..@CheckOut</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>离店日期，当天是不包含的。格式为yyyy-MM-dd</td>
+</tr>
+<tr>
+<td>./ContactPerson</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>联系人信息</td>
+</tr>
+<tr>
+<td>..@GivenName</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>此联系人的名</td>
+</tr>
+<tr>
+<td>..@Surname</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>此联系人的姓</td>
+</tr>
+<tr>
+<td>..@CountryCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>此联系人所在的国家代码</td>
+</tr>
+<tr>
+<td>..@StateCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>此联系人所在的地区代码</td>
+</tr>
+<tr>
+<td>..@City</td>
+<td>0.1</td>
+<td>String</td>
+<td>128</td>
+<td>此联系人所在的城市</td>
+</tr>
+<tr>
+<td>..@Address</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>此联系人所在的街道</td>
+</tr>
+<tr>
+<td>..@Email</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>此联系人的邮箱地址</td>
+</tr>
+<tr>
+<td>..@Telephone</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>此联系人的移动联系方式</td>
+</tr>
+<tr>
+<td>./GuestCount</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>每间房入住人信息</td>
+</tr>
+<tr>
+<td>..@AdultCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的成人数量</td>
+</tr>
+<tr>
+<td>..@ChildCount</td>
+<td>1</td>
+<td>Int</td>
+<td></td>
+<td>每间房的小孩数量</td>
+</tr>
+<tr>
+<td>..@ChildAges</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>小孩年龄，多个小孩年龄用英文逗号（,）分隔，并且和小孩数量是对应的。如果小孩数量大于零，则小孩年龄一定不能为空。</td>
+</tr>
+<tr>
+<td>./Guests</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>所有入住的客人信息</td>
+</tr>
+<tr>
+<td>../Guest</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>表示多个客人详细信息的列表</td>
+</tr>
+<tr>
+<td>...@GivenName</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>客人的名</td>
+</tr>
+<tr>
+<td>...@Surname</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>客人的姓</td>
+</tr>
+<tr>
+<td>...@RoomIndex</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示此客人会入住第几间房间，具体逻辑请参阅附录：</td>
+</tr>
+<tr>
+<td>...@CountryCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>客人的国家代码</td>
+</tr>
+<tr>
+<td>...@StateCode</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>客人所在的地区代码</td>
+</tr>
+<tr>
+<td>...@City</td>
+<td>0.1</td>
+<td>String</td>
+<td>128</td>
+<td>客人所在的城市</td>
+</tr>
+<tr>
+<td>...@Address</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>客人所在的街道</td>
+</tr>
+<tr>
+<td>...@Email</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>客人的邮箱地址</td>
+</tr>
+<tr>
+<td>...@Telephone</td>
+<td>0.1</td>
+<td>String</td>
+<td>32</td>
+<td>客人的移动联系方式</td>
+</tr>
+<tr>
+<td>./Comments</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>此订单的备注</td>
+</tr>
+<tr>
+<td>../Comment</td>
+<td>1.n</td>
+<td>String</td>
+<td>128</td>
+<td>一个订单可能有多个备注，需要注意的是我们<strong>可能</strong>会将备注截断以符合酒店供应商的限制。DerbySoft may cut your comments to fit supplier&#39;s limitation.</td>
+</tr>
+<tr>
+<td>./RoomRates</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>../RoomRate</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表具体房型的相关价格信息的列表</td>
+</tr>
+<tr>
+<td>...@RoomTypeCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>房型的唯一ID</td>
+</tr>
+<tr>
+<td>...@RatePlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>价格计划的唯一ID</td>
+</tr>
+<tr>
+<td>...@MealPlanCode</td>
+<td>1</td>
+<td>String</td>
+<td>8</td>
+<td>含餐信息的唯一ID, 详细含餐ID列表请见附录 ** **</td>
+</tr>
+<tr>
+<td>.../Rates</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>..../Rate</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>代表此房型在此价格计划以及含餐信息下的具体价格信息</td>
+</tr>
+<tr>
+<td>.....@EffectiveDate</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>价格信息的有效时间，这个日期是包含的。</td>
+</tr>
+<tr>
+<td>.....@ExpireDate</td>
+<td>1</td>
+<td>String</td>
+<td>12</td>
+<td>价格信息的无效时间，这个日期是不包含的。</td>
+</tr>
+<tr>
+<td>.....@AmountBeforeTax</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>税前价</td>
+</tr>
+<tr>
+<td>.....@AmountAfterTax</td>
+<td>1</td>
+<td>Double</td>
+<td></td>
+<td>税后价</td>
+</tr>
+<tr>
+<td>.....@ExtraPersonCharge</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>每加一个人需要收取的额外的税前费用，详见附录。</td>
+</tr>
+<tr>
+<td>.....@ExtraPersonChargeAfterTax</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>每加一个人需要收取的额外的税后费用，详见附录。</td>
+</tr>
+<tr>
+<td>.../Fees</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>税规则，详细例子请见附录。</td>
+</tr>
+<tr>
+<td>..../Fee</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>详细税规则列表</td>
+</tr>
+<tr>
+<td>.....@ChargeType</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>表示税规则的名称，如CityFee（城市税）或ServiceCharge（服务税）等。</td>
+</tr>
+<tr>
+<td>.....@Type</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>[ Inclusive, Exclusive, Cumulative ]，表示此税是否已经包含在了上面（/Rates 节点）的价格内。</td>
+</tr>
+<tr>
+<td>.....@EffectiveDate</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>税规则的生效时间，当天是包含在内的，一定与EffectiveDate一起出现或不出现。格式为yyyy-MM-dd，示例：2017-01-01</td>
+</tr>
+<tr>
+<td>.....@ExpireDate</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>税规则的失效时间，当天是不包含在内的，一定与ExpireDate一起出现或不出现。格式为yyyy-MM-dd，示例：2017-01-09</td>
+</tr>
+<tr>
+<td>.....@Unit</td>
+<td>0.1</td>
+<td>Enum</td>
+<td></td>
+<td>[ PER_ROOM_PER_NIGHT, PER_PERSON_PER_NIGHT, PER_ROOM_PER_STAY,  PER_PERSON_PER_STAY ] 表示税规则的单位，如果Amount不为空的时候，此值一定不会为空，反之此值可能为空。</td>
+</tr>
+<tr>
+<td>.....@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>收取税的比例，当Amount为空的时候，此值一定不为空。不与@Amount同时存在。</td>
+</tr>
+<tr>
+<td>.....@Amount</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>收取税的具体金额，当Percent为空的时候，此值一定不为空。不与@Percent同时存在。</td>
+</tr>
+<tr>
+<td>.../CancelPolicy</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消政策</td>
+</tr>
+<tr>
+<td>...@NonRefundable</td>
+<td>1</td>
+<td>Boolean</td>
+<td></td>
+<td>表示是否不可取消且不退款</td>
+</tr>
+<tr>
+<td>..../Description</td>
+<td>0.1</td>
+<td>String</td>
+<td>1024</td>
+<td>取消政策的描述信息，只会在SingleAvail中出现。</td>
+</tr>
+<tr>
+<td>..../CancelPenalties</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>取消惩罚政策</td>
+</tr>
+<tr>
+<td>...../CancelPenalty</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>代表取消惩罚政策的列表</td>
+</tr>
+<tr>
+<td>......@MinHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最小时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>......@MaxHoursBeforeCheckIn</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示这个惩罚政策作用的时间段中的最大时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。</td>
+</tr>
+<tr>
+<td>......@Deadline</td>
+<td>0.1</td>
+<td>String</td>
+<td>8</td>
+<td>表示最迟入住的时间点，格式示例为 12AM, 4:30PM.</td>
+</tr>
+<tr>
+<td>......@Nights</td>
+<td>0.1</td>
+<td>Int</td>
+<td></td>
+<td>表示罚款的间夜数，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>......@Price</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款的金额，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>......@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>表示罚款相对于当次入住总金额的百分比，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空</td>
+</tr>
+<tr>
+<td>......@NoShow</td>
+<td>0.1</td>
+<td>Boolean</td>
+<td></td>
+<td>是否为NoShow的惩罚，当NoShow为True时，MinHoursBeforeCheckIn 和MaxHoursBeforeCheckIn为空。</td>
+</tr>
+<tr>
+<td>./Total</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td>此订单的总价</td>
+</tr>
+<tr>
+<td>..@CurrencyCode</td>
+<td>1</td>
+<td>String</td>
+<td>3</td>
+<td>标识货币的唯一ID，遵循 ISO 4217</td>
+</tr>
+<tr>
+<td>..@AmountBeforeTax</td>
+<td>1</td>
+<td>Double</td>
+<td>32</td>
+<td>此订单的税前总价</td>
+</tr>
+<tr>
+<td>..@AmountAfterTax</td>
+<td>1</td>
+<td>Double</td>
+<td>32</td>
+<td>此订单的税后总价</td>
+</tr>
+<tr>
+<td>./ReservationId</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>..@DistributorReservationId</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>渠道订单号，渠道应该保证此订单号唯一，相同的渠道订单号可能会被认为是同一张订单而导致重复订单问题。</td>
+</tr>
+<tr>
+<td>..@DerbysoftReservationId</td>
+<td>1</td>
+<td>String</td>
+<td>32</td>
+<td>Derby订单号，此订单号由德比生成并返回给渠道，可用此订单号进行订单查询</td>
+</tr>
+<tr>
+<td>..@HotelReservationId</td>
+<td>0.1</td>
+<td>String</td>
+<td>256</td>
+<td>酒店订单号，当订单被成功确认的时候酒店会返回此订单号。</td>
+</tr>
+<tr>
+<td>..@HotelCancelConfirmId</td>
+<td>0.1</td>
+<td>String</td>
+<td>256</td>
+<td>酒店端取消确认号。返回此确认号代表取消成功，否则会返回具体的取消失败原因，参见 ErrorResponse</td>
+</tr>
+<tr>
+<td>./ReservationStatus</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>订单的状态</td>
+</tr>
+<tr>
+<td>..@ResStatus</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>[&quot;None&quot;, &quot;Success&quot;, &quot;Failed&quot;, &quot;Processing&quot;]订单的状态默认为None，代表订单已经到德比，但德比的处理和酒店的处理结果未知，Failed代表订单失败，Processing订单已经通过德比到达酒店，但酒店的处理结果未知</td>
+</tr>
+<tr>
+<td>..@CancelStatus</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>[&quot;None&quot;, &quot;Success&quot;, &quot;Failed&quot;, &quot;Processing&quot;]取消订单的状态默认为None，代表取消请求已经到德比，但德比的处理和酒店的处理结果未知，Failed代表取消失败，Processing表示取消请求已经通过德比到达酒店，但酒店的处理结果未知</td>
+</tr>
+</tbody></table>
+<h1 id='128e9ff023'>错误处理</h1>
+<p>所有的API在任何可能的情况下出错，都会返回相同的错误结构，见右侧示例。</p>
+
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte）</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>/XXXXResponse</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td>XXXX对应请求的类型</td>
+</tr>
+<tr>
+<td>@Token</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>标识渠道的Request和Response的唯一ID</td>
+</tr>
+<tr>
+<td>@Status</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>此次请求的状态，只能为[ Successful or Failed ]</td>
+</tr>
+<tr>
+<td>/Error</td>
+<td>1</td>
+<td>Object</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>..@Code</td>
+<td>1</td>
+<td>String</td>
+<td>128</td>
+<td>错误码</td>
+</tr>
+<tr>
+<td>..@Message</td>
+<td>1</td>
+<td>String</td>
+<td>1024</td>
+<td>具体的错误原因</td>
+</tr>
+</tbody></table>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;XXXXResponse</span> <span class="na">Status=</span><span class="s">"Fail"</span> <span class="na">Token=</span><span class="s">"967d78e9-d3f9-4f85-bc84-2ee5f829166f"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Error</span> <span class="na">Code=</span><span class="s">"HotelNotFound"</span> <span class="na">Message=</span><span class="s">"Hotel [HI-EXECC] is not found"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/XXXXResponse&gt;</span>
+
+</code></pre><h1 id='2d6b6898d5'>上线后的保障及服务</h1>
+<ul>
+<li>上线后的所有问题请以邮件的方式发送到Go.support@derbysoft.net  ，我们收到后会及时协助处理并回复。</li>
+<li>我们任何有可能影响到客户的升级将会提前至少3天以邮件的形式通知到您。如果是不兼容的升级，将至少提前15天发出通知。</li>
+<li>我们会通过监控系统监控所有接口调用的健康状况，当我们发现接口调用有异常，在必要的情况下我们的7*24小时团队会立即给您发邮件进行通知。 </li>
+</ul>
+<h1 id='f8519014aa'>附录</h1><h2 id='cancellation-policy'>取消政策（Cancellation Policy）</h2>
+<p>取消政策定义了当客户在不同时间段内取消已经预定成功的订单所带来的罚款策略。</p>
+
+<p>为了兼容以前的版本，我们保留了RatePlan 级别的CancelPolicy，这是要废弃的节点，强烈不建议使用。</p>
+
+<p>有的取消政策表示为不可取消且不退款（Non Refundable）。在接口中表示为：</p>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+</code></pre>
+<p>取消的（非Non Refundable）在接口中表示为: 
+```xml</p>
+
+<p><CancelPolicy NonRefundable="false">
+  <CancelPenalties>
+    <CancelPenalty MaxHoursBeforeCheckIn="24" 
+    MinHoursBeforeCheckIn="0" NoShow="false" Percent="50"/>
+    <CancelPenalty Deadline="6PM" NoShow="false" Percent="80"/>
+    <CancelPenalty NoShow="true" Percent="100"/>
+  </CancelPenalties>
+</CancelPolicy></p>
+<pre class="highlight plaintext"><code>
+参数名称                       | 重复次数       | 参数类型   | 长度（Byte）  | 描述
+------------------------------| ------------- | --------- | --------- | -----------
+/CancelPolicy                 | 0.1           | Object    |           | 取消政策
+@NonRefundable                | 1             | Boolean   |           | 表示是否不可取消且不退款
+./Description                 | 0.1           | String    | 1024      | 取消政策的描述信息，只会在SingleAvail中出现。
+./CancelPenalties             | 0.1           | Object    |           | 取消惩罚政策
+../CancelPenalty              | 1.n           | List      |           | 代表取消惩罚政策的列表
+...@MinHoursBeforeCheckIn     | 0.1           | Int       |           | 表示这个惩罚政策作用的时间段中的最小时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。
+...@MaxHoursBeforeCheckIn     | 0.1           | Int       |           | 表示这个惩罚政策作用的时间段中的最大时间点，由相对于入住时间的整点数表示。如果NoShow为false的时候此项必填。
+...@Deadline                  | 0.1           | String    | 8         | 表示最迟入住的时间点，格式示例为 12AM, 4:30PM.
+...@Nights                    | 0.1           | Int       |           | 表示罚款的间夜数，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空
+...@Price                     | 0.1           | Double    |           | 表示罚款的金额，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空
+...@Percent                   | 0.1           | Double    |           | 表示罚款相对于当次入住总金额的百分比，Nights，Price，Percent不能同时为空，当其中一个有值的时候，其他两个必须为空
+...@NoShow                    | 0.1           | Boolean   |           | 是否为NoShow的惩罚，当NoShow为True时，MinHoursBeforeCheckIn 和MaxHoursBeforeCheckIn为空。
+
+### 关于币种
+这里的货币与Rates节点内的货币单位保持一致。
+
+### 关于取消政策中的时间段
+ * NoShow时间点：过了这个时间点，由于客户没有入住或者取消订单，酒店将不再为客户继续保留已经预定的房间，并且客户需要为违约支付一定的费用。在接口中，我们用 [ NoShow="true" ] 来表示这个状态，紧接着的[ Percent="100" 或者 Nights="1" ] 来表示需要支付的违约费用，如：&lt;CancelPenalty NoShow="true" Percent="100"/&gt;
+ * 入住当天DeadLine到NoShow时间段：一般情况下，酒店会在入住时间（CheckIn Date）的当天设置一个最后入住时间点（Deadline）。客户如果没有在Deadline之前入住或者取消订单，酒店可能会有更严格的罚款策略。在接口中，Deadline的格式为12AM或者6:30PM，请注意，12AM代表早晨零点，不代表中午12点。如果只有NoShow而没有其他惩罚策略时，接口中不返回Deadline，其他条件下一定会返回Deadline。
+ * 入住当天Deadline之前的时间段：在入住当天Deadline之前，可能存在多个取消时间段窗口，在不同的时间段内取消的惩罚不同，正常情况下惩罚会随着更加接近入住当天的Deadline而变得更加严格。在接口中，我们用MaxHoursBeforeCheckIn 和 MinHoursBeforeCheckIn来表示相对于入住当天的Deadline的小时数，值得注意的是，这些小时数目前都是24的倍数，代表天数。
+ * 无限提前的时间段：当MaxHoursBeforeCheckIn为9999时，表示相对于入住当天无限提前。如果这个时间段内没有罚款，则在接口中这一段的表示会被省略。
+
+### 关于时区
+所有的时间（ Deadline 或者 Advance day）表示均以酒店当地的时区为准。但有一些供应商例外（大多数都是酒店批发商），这时候你需要把这些时间转换为批发商所在的时区。
+
+### 惩罚类型
+* Percent：表示当次入住的总金额的百分比，如连住三天共600元，如果NoShow的惩罚100%，则表示取消惩罚为600元。在接口中表示为： &lt;CancelPenalty NoShow="true" Percent="100"/&gt;
+* Nights：表示会惩罚前多少个间夜的价钱，举个例子。100，110，120三天，惩罚nights为2，则会惩罚100+110。
+* Price：表示固定价钱的罚款，如住三天600元，如果在入住前两天内取消，会罚款120元，则表示总共罚款120元。在接口中表示为：&lt;CancelPenalty MaxHoursBeforeCheckIn="48" MinHoursBeforeCheckIn="0" NoShow="false" Price="120"/&gt;
+
+### 取消政策的例子
+
+&lt;aside class="info"&gt;
+以下所有的例子的入住时间（CheckIn）都是2016-10-15
+&lt;/aside&gt;
+
+#### 示例1
+
+```xml
+
+&lt;CancelPolicy NonRefundable="false"&gt;
+  &lt;CancelPenalties&gt;
+    &lt;CancelPenalty MaxHoursBeforeCheckIn="9999" MinHoursBeforeCheckIn="168" 
+    NoShow="false" Price="20"/&gt;
+    &lt;CancelPenalty MaxHoursBeforeCheckIn="168" MinHoursBeforeCheckIn="72" 
+    NoShow="false" Price="50"/&gt;
+    &lt;CancelPenalty MaxHoursBeforeCheckIn="72" MinHoursBeforeCheckIn="24" 
+    NoShow="false" Nights="1"/&gt;
+    &lt;CancelPenalty MaxHoursBeforeCheckIn="24" MinHoursBeforeCheckIn="0" 
+    NoShow="false" Percent="50"/&gt;
+    &lt;CancelPenalty Deadline="6PM" NoShow="false" Percent="80"/&gt;
+    &lt;CancelPenalty NoShow="true" Percent="100"/&gt;
+  &lt;/CancelPenalties&gt;
+&lt;/CancelPolicy&gt;
+
+</code></pre>
+<ul>
+<li><p><code>&lt;CancelPenalty NoShow=&quot;true&quot; Percent=&quot;100&quot;/&gt;</code>
+表示在NoShow时的罚款政策，一般酒店的NoShow时间会设置在入住第二天（即2016-10-16日）的12AM(零点)-10AM。如果客人既没有取消订单又没有到店或者过期后取消订单，都会被收取整次入住的所有费用。</p></li>
+<li><p><code>&lt;CancelPenalty Deadline=&quot;6PM&quot; NoShow=&quot;false&quot; Percent=&quot;80&quot;/&gt;</code>
+表示客人在入住当天（0D 即 2016-10-15日当天）下午6点后到NoShow的时间点之间取消订单，则会被罚款相对于整次入住总金额的80%。</p></li>
+<li><p><code>&lt;CancelPenalty MaxHoursBeforeCheckIn=&quot;24&quot; MinHoursBeforeCheckIn=&quot;0&quot; NoShow=&quot;false&quot; Percent=&quot;50&quot;/&gt;</code>
+表示客人在入住前一天（即2016-10-14日）下午6点至入住当天（即2016-10-15日）的下午6点，这段时间内取消订单，则会被罚款相对于整次入住总金额的50%。</p></li>
+<li><p><code>&lt;CancelPenalty MaxHoursBeforeCheckIn=&quot;72&quot; MinHoursBeforeCheckIn=&quot;24&quot; NoShow=&quot;false&quot; Nights=&quot;1&quot;/&gt;</code>
+表示客人在入住前三天（即2016-10-12日）下午6点至入住前一天（即2016-10-14日）的下午6点，这段时间内取消订单，则会被罚款第一个间夜的金额。</p></li>
+<li><p><code>&lt;CancelPenalty MaxHoursBeforeCheckIn=&quot;168&quot; MinHoursBeforeCheckIn=&quot;72&quot; NoShow=&quot;false&quot; Price=&quot;50&quot;/&gt;</code>
+表示客人在入住前七天（即2016-10-08日）下午6点至入住前三天（即2016-10-12日）的下午6点，这段时间内取消订单，则会被罚款50（这里的货币与Rates节点内的货币单位保持一致）。</p></li>
+<li><p><code>&lt;CancelPenalty MaxHoursBeforeCheckIn=&quot;9999&quot; MinHoursBeforeCheckIn=&quot;168&quot; NoShow=&quot;false&quot; Price=&quot;20&quot;/&gt;</code>
+表示客人在入住前七天（即2016-10-08日）之前取消订单，会被罚款20（这里的货币与Rates节点内的货币单位保持一致）。</p></li>
+</ul>
+<h4 id='2'>示例2</h4><pre class="highlight xml tab-xml"><code><span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;CancelPenalties&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">MaxHoursBeforeCheckIn=</span><span class="s">"24"</span> <span class="na">MinHoursBeforeCheckIn=</span><span class="s">"0"</span> 
+    <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Percent=</span><span class="s">"100"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">Deadline=</span><span class="s">"12AM"</span> <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Percent=</span><span class="s">"100"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">NoShow=</span><span class="s">"true"</span> <span class="na">Percent=</span><span class="s">"100"</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;/CancelPenalties&gt;</span>
+<span class="nt">&lt;/CancelPolicy&gt;</span>
+</code></pre>
+<blockquote>
+<p>以上示例的完整表示</p>
+</blockquote>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;CancelPenalties&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">MaxHoursBeforeCheckIn=</span><span class="s">"9999"</span> <span class="na">MinHoursBeforeCheckIn=</span><span class="s">"24"</span> 
+    <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Price=</span><span class="s">"0"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">MaxHoursBeforeCheckIn=</span><span class="s">"24"</span> <span class="na">MinHoursBeforeCheckIn=</span><span class="s">"0"</span> 
+    <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Percent=</span><span class="s">"100"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">Deadline=</span><span class="s">"12AM"</span> <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Percent=</span><span class="s">"100"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">NoShow=</span><span class="s">"true"</span> <span class="na">Percent=</span><span class="s">"100"</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;/CancelPenalties&gt;</span>
+<span class="nt">&lt;/CancelPolicy&gt;</span>
+</code></pre>
+<ul>
+<li><code>&lt;CancelPenalty NoShow=&quot;true&quot; Percent=&quot;100&quot;/&gt;</code></li>
+</ul>
+
+<p>表示在NoShow时的罚款政策，一般酒店的NoShow时间会设置在入住第二天（即2016-10-16日）的12AM(零点)-10AM。如果客人既没有取消订单又没有到店或者过期后取消订单，都会被收取整次入住的所有费用。</p>
+
+<ul>
+<li><code>&lt;CancelPenalty Deadline=&quot;12AM&quot; NoShow=&quot;false&quot; Percent=&quot;100&quot;/&gt;</code></li>
+</ul>
+
+<p>表示客人在入住当天（0D 即 2016-10-15日当天）的零点到NoShow的时间点之间取消订单，则会被罚款相对于整次入住总金额的100%。</p>
+
+<ul>
+<li><code>&lt;CancelPenalty MaxHoursBeforeCheckIn=&quot;24&quot; MinHoursBeforeCheckIn=&quot;0&quot; NoShow=&quot;false&quot; Percent=&quot;100&quot;/&gt;</code></li>
+</ul>
+
+<p>表示客人在入住前一天（即2016-10-14日）的零点到入住当天（即2016-10-15）的零点，这段时间内取消订单，则会被罚款相对于整次入住总金额的100%。</p>
+
+<ul>
+<li><code>&lt;CancelPenalty MaxHoursBeforeCheckIn=&quot;9999&quot; MinHoursBeforeCheckIn=&quot;24&quot; NoShow=&quot;false&quot; Price=&quot;0&quot;/&gt;</code></li>
+</ul>
+
+<p>这一段在接口返回中会被省略。表示客人在入住前一天（即2016-10-14日）零点之前可以免费取消。</p>
+<h4 id='3'>示例3</h4><pre class="highlight xml tab-xml"><code><span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;CancelPenalties&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">Deadline=</span><span class="s">"6PM"</span> <span class="na">MaxHoursBeforeCheckIn=</span><span class="s">"24"</span> 
+    <span class="na">MinHoursBeforeCheckIn=</span><span class="s">"0"</span> <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Percent=</span><span class="s">"80"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">Deadline=</span><span class="s">"6PM"</span> <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Percent=</span><span class="s">"80"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">NoShow=</span><span class="s">"true"</span> <span class="na">Percent=</span><span class="s">"100"</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;/CancelPenalties&gt;</span>
+<span class="nt">&lt;/CancelPolicy&gt;</span>
+</code></pre><pre class="highlight xml tab-xml"><code><span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;CancelPenalties&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">MaxHoursBeforeCheckIn=</span><span class="s">"9999"</span> <span class="na">MinHoursBeforeCheckIn=</span><span class="s">"24"</span> 
+    <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Price=</span><span class="s">"0"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">MaxHoursBeforeCheckIn=</span><span class="s">"24"</span> <span class="na">MinHoursBeforeCheckIn=</span><span class="s">"0"</span> 
+    <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Percent=</span><span class="s">"80"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">Deadline=</span><span class="s">"6PM"</span> <span class="na">NoShow=</span><span class="s">"false"</span> <span class="na">Percent=</span><span class="s">"80"</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">NoShow=</span><span class="s">"true"</span> <span class="na">Percent=</span><span class="s">"100"</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;/CancelPenalties&gt;</span>
+<span class="nt">&lt;/CancelPolicy&gt;</span>
+</code></pre>
+<ul>
+<li><code>&lt;CancelPenalty NoShow=&quot;true&quot; Percent=&quot;100&quot;/&gt;</code></li>
+</ul>
+
+<p>表示在NoShow时的罚款政策，一般酒店的NoShow时间会设置在入住第二天（即2016-10-16日）的12AM(零点)-10AM。如果客人既没有取消订单又没有到店或者过期后取消订单，都会被收取整次入住的所有费用。</p>
+
+<ul>
+<li><code>&lt;CancelPenalty Deadline=&quot;6PM&quot; NoShow=&quot;false&quot; Percent=&quot;80&quot;/&gt;</code></li>
+</ul>
+
+<p>表示客人在入住当天（0D 即 2016-10-15日当天）的下午6点到NoShow的时间点之间取消订单，则会被罚款相对于整次入住总金额的80%。</p>
+
+<ul>
+<li><code>&lt;CancelPenalty MaxHoursBeforeCheckIn=&quot;24&quot; MinHoursBeforeCheckIn=&quot;0&quot; NoShow=&quot;false&quot; Percent=&quot;80&quot;/&gt;</code></li>
+</ul>
+
+<p>表示客人在入住前一天（即2016-10-14日）的下午6点到入住当天（即2016-10-15）的下午6点，这段时间内取消订单，则会被罚款相对于整次入住总金额的80%。</p>
+
+<ul>
+<li><code>&lt;CancelPenalty MaxHoursBeforeCheckIn=&quot;9999&quot; MinHoursBeforeCheckIn=&quot;24&quot; NoShow=&quot;false&quot; Price=&quot;0&quot;/&gt;</code></li>
+</ul>
+
+<p>这一段在接口返回中会被省略。表示客人在入住前一天（即2016-10-14日）下午6点之前可以免费取消。</p>
+<h4 id='4'>示例4</h4><pre class="highlight xml tab-xml"><code><span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"true"</span><span class="nt">/&gt;</span>
+</code></pre>
+<ul>
+<li>表示不可取消，客人无法在任何时间段内取消订单，如果客人没有到店，和NoShow的情况下罚款100%一样，收取入住的总金额。</li>
+</ul>
+<h4 id='5'>示例5</h4><pre class="highlight xml tab-xml"><code><span class="nt">&lt;CancelPolicy</span> <span class="na">NonRefundable=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;CancelPenalties&gt;</span>
+    <span class="nt">&lt;CancelPenalty</span> <span class="na">NoShow=</span><span class="s">"true"</span> <span class="na">Nights=</span><span class="s">"1"</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;/CancelPenalties&gt;</span>
+<span class="nt">&lt;/CancelPolicy&gt;</span>
+</code></pre>
+<ul>
+<li>表示客人可以在NoShow时间点之前的任意时间进行取消，不收取任何费用，但是如果NoShow，则会收取第一晚的费用。</li>
+</ul>
+<h2 id='fee'>税费（Fee）</h2>
+<p>税费的计算主要通过我们定义的税规则来实现，税规则表达了酒店所在地区或者所在国家的税费收取准则。</p>
+
+<p>在接口中，税规则里表示费用的方式只有三种，固定价格和按百分比收取。他们之间是互斥的，如：<Fee ChargeType="Service Charge" Type="Exclusive" Percent="5" Amount="10"> 这种Percent和Amount同时出现在一个Fee节点的情况是一定不会出现的。而Unit只会和Amount一起出现在一个Fee节点内。</p>
+
+<p>一条完整的税规则表示为：</p>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;Fees&gt;</span>
+  <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"Service Charge"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="na">Percent=</span><span class="s">"5"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"State Tax"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="na">Percent=</span><span class="s">"10"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Fee</span> <span class="na">ChargeType=</span><span class="s">"City Tax"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="na">Amount=</span><span class="s">"1"</span> <span class="na">Unit=</span><span class="s">"PER_ROOM_PER_NIGHT"</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/Fees&gt;</span>
+
+</code></pre>
+<table><thead>
+<tr>
+<th>参数名称</th>
+<th>重复次数</th>
+<th>参数类型</th>
+<th>长度（Byte）</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Fees</td>
+<td>0.1</td>
+<td>Object</td>
+<td></td>
+<td>税规则</td>
+</tr>
+<tr>
+<td>./Fee</td>
+<td>1.n</td>
+<td>List</td>
+<td></td>
+<td>详细税规则列表</td>
+</tr>
+<tr>
+<td>..@ChargeType</td>
+<td>1</td>
+<td>String</td>
+<td>64</td>
+<td>表示税规则的名称，如CityFee（城市税）或ServiceCharge（服务税）等，在一条税规则中，名称是唯一的。</td>
+</tr>
+<tr>
+<td>..@Type</td>
+<td>1</td>
+<td>Enum</td>
+<td></td>
+<td>[ Inclusive, Exclusive, Cumulative ]，详细说明见下方：税规则（@Type）的种类</td>
+</tr>
+<tr>
+<td>..@EffectiveDate</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>税规则的生效时间，当天包含在内，一定与ExpireDate一起出现或不出现。格式为yyyy-MM-dd，示例：2017-01-01</td>
+</tr>
+<tr>
+<td>..@ExpireDate</td>
+<td>0.1</td>
+<td>String</td>
+<td>12</td>
+<td>税规则的失效时间，当天不包含在内，一定与EffectiveDate一起出现或不出现。格式为yyyy-MM-dd，示例：2017-01-09</td>
+</tr>
+<tr>
+<td>..@Unit</td>
+<td>0.1</td>
+<td>Enum</td>
+<td></td>
+<td>[ PER_ROOM_PER_NIGHT, PER_PERSON_PER_NIGHT, PER_ROOM_PER_STAY,  PER_PERSON_PER_STAY ] 表示税规则的单位，如果Amount不为空的时候，此值一定不会为空，反之此值可能为空。</td>
+</tr>
+<tr>
+<td>..@Percent</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>收取税的比例，当Amount为空的时候，此值一定不为空。不与@Amount同时存在。</td>
+</tr>
+<tr>
+<td>..@Amount</td>
+<td>0.1</td>
+<td>Double</td>
+<td></td>
+<td>收取税的具体金额，当Percent为空的时候，此值一定不为空。不与@Percent同时存在。</td>
+</tr>
+</tbody></table>
+<h3 id='type'>税规则（@Type）的种类</h3>
+<ul>
+<li>Inclusive：表示此税已经包含在税前价（AmountBeforeTax）里，无需再收取。如：<Fee ChargeType="Tax" Percent=“5.00" Type="Inclusive"/> 或 <Fee ChargeType="City Tax" Type="Inclusive" Amount="1" Unit="PER_ROOM_PER_NIGHT"></li>
+<li>Exclusive：表示此税不包含在税前价（AmountBeforeTax）里，需要额外收取。如：<Fee ChargeType="Tax" Percent=“5.00" Type="Exclusive"/> 或  <Fee ChargeType="City Tax" Type="Exclusive" Amount="1" Unit="PER_ROOM_PER_NIGHT"></li>
+<li>Cumulative：一种特殊的百分比税，不包含在税前价里。<strong>具体计算规则请见后面例子</strong>。 如：<Fee ChargeType="Tax" Percent=“5.00" Type="Cumulative"/></li>
+</ul>
+<h3 id='amount'>按固定金额收税（@Amount）</h3>
+<p>当按照固定金额收取税费的时候，@Type一定不为Cumulative，并且@Unit一定有值且为[ PER_ROOM_PER_NIGHT, PER_PERSON_PER_NIGHT, PER_ROOM_PER_STAY,  PER_PERSON_PER_STAY ] 中任意一个值。@Amount和@Percent一定存在并只会存在其中一个。</p>
+
+<ul>
+<li><code>[ PER_ROOM_PER_NIGHT ]: 表示按照每晚每间房收取@Amount的费用</code></li>
+<li><code>[ PER_PERSON_PER_NIGHT ]: 表示按照每晚每个成人收取@Amount的费用</code></li>
+<li><code>[ PER_ROOM_PER_STAY ]: 表示按照每间房每次入住收取@Amount的费用</code></li>
+<li><code>[ PER_PERSON_PER_STAY ]: 表示按照每个成人每次入住收取@Amount的费用</code></li>
+</ul>
+<h3 id='percent'>按百分比收税（@Percent）</h3>
+<p>这里有两种按照百分比收取费用的方式，一种是普通的百分比，一种是 和百分比（Cumulative）。</p>
+
+<ul>
+<li>普通的百分比：表示按照每天每间房价格的百分比收取税费。</li>
+<li>和百分比：在某些国家或者地区有的一种累积的税费计算方式，即使用前面算得的税后价作为税前价来计算后面的税费，下面是一个具体的例子：</li>
+</ul>
+<h4 id='663a459fcb'>和百分比的例子</h4>
+<p>假设税前价是 100。</p>
+
+<p>税规则为：
+<code>xml
+&lt;Fees&gt;
+  &lt;Fee ChargeType=&quot;Service Charge&quot; Type=&quot;Exclusive&quot; Percent=&quot;5&quot;&gt;
+  &lt;Fee ChargeType=&quot;State Tax&quot; Type=&quot;Exclusive&quot; Percent=&quot;10&quot;&gt;
+  &lt;Fee ChargeType=&quot;City Tax&quot; Type=&quot;Exclusive&quot; Amount=&quot;1&quot; Unit=&quot;PER_ROOM_PER_NIGHT&quot;&gt;
+&lt;/Fees&gt;
+</code></p>
+
+<p>计算税后价的过程为（从上到下）：
+* <code>&lt;Fee ChargeType=&quot;Service Charge&quot; Type=&quot;Exclusive&quot; Percent=&quot;5&quot;&gt;</code>
+收取服务税后的价格为：税前价<em>(1+服务税百分比)=100</em>(1+5%)=105
+* <code>&lt;Fee ChargeType=&quot;State Tax&quot; Type=&quot;Exclusive&quot; Percent=&quot;10&quot;&gt;</code>
+收取地方税后的价格为：收取服务税收的价格<em>(1+地方税百分比)=105</em>(1+10%)=115.5
+* <code>&lt;Fee ChargeType=&quot;City Tax&quot; Type=&quot;Exclusive&quot; Amount=&quot;1&quot; Unit=&quot;PER_ROOM_PER_NIGHT&quot;&gt;</code>
+收取城市税后的价格为（总的税后价）：收取地方税后的价格+城市税=115.5+1=116.5</p>
+<h3 id='88a8652d4f'>变税</h3>
+<p>这是一种特殊情况，一般由政府或者地区的政策导致。</p>
+<h4 id='b4ebe40ed1'>变税的例子</h4>
+<ul>
+<li>入住日期（CheckIn）：2016年12月28日</li>
+<li>离店日期（CheckOut）：2017年1月3日</li>
+<li>收取的第一种税：城市税（City Tax）2$ 每间房每晚（PER_ROOM_PER_NIGHT）</li>
+<li>收取的第二种税：地方税（State Tax）8.5%</li>
+<li>每天的税前价：100%</li>
+</ul>
+
+<p>但是地方税（State Tax）第二年从8.5%变到了9.5%。第二年时原来的 [第二种税：地方税（State Tax）8.5%] 就不适用了，这种场景下我们的计算规则如下：</p>
+
+<ul>
+<li>在2016年12月31日和之前，按照地方税 8.5%计算：100$ * (1+8.5%) + 2$ = 110.5$</li>
+<li>在2017年1月1日和之后，按照地方税9.5%计算：100$ * (1+9.5%) + 2$ = 111.5$</li>
+</ul>
+
+<p>所以最后的的税后价为：110.5$ * 4 + 111.5$ * 2 = 665.0$</p>
+
+<p>我们的税规则表示方式会采用分段的形式，这里是唯一需要用到EffectiveDate 和ExpireDate的场景，如下：</p>
+<pre class="highlight xml tab-xml"><code><span class="nt">&lt;Fees&gt;</span>
+  <span class="nt">&lt;Fee</span> <span class="na">Name=</span><span class="s">"City Tax"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="na">Amount=</span><span class="s">"2"</span> <span class="na">Unit=</span><span class="s">"PER_ROOM_PER_NIGHT"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Fee</span> <span class="na">Name=</span><span class="s">"State Tax"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="na">EffectiveDate=</span><span class="s">"2016-12-28"</span> 
+  <span class="na">ExpireDate=</span><span class="s">"2017-01-01"</span> <span class="na">Percent=</span><span class="s">"8.5"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;Fee</span> <span class="na">Name=</span><span class="s">"State Tax"</span> <span class="na">Type=</span><span class="s">"Exclusive"</span> <span class="na">EffectiveDate=</span><span class="s">"2017-01-01"</span> 
+  <span class="na">ExpireDate=</span><span class="s">"2017-01-03"</span> <span class="na">Percent=</span><span class="s">"9.5"</span><span class="nt">&gt;</span>
+<span class="nt">&lt;/Fees&gt;</span>
+</code></pre><h2 id='meal-plan-code'>含餐信息代码表（Meal Plan Code）</h2>
+<table><thead>
+<tr>
+<th>含餐代码</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>RO</td>
+<td>&quot;Room Only&quot;, &quot;只包含客房不含餐&quot;</td>
+</tr>
+<tr>
+<td>SC</td>
+<td>&quot;Self Catering&quot;, &quot;和RO有点类似，但客房内有厨具等，客人可以自己动手准备饭菜。</td>
+</tr>
+<tr>
+<td>DB</td>
+<td>&quot;Dinner Buffet&quot;, &quot;所有涵盖的客房中的客人都可以在每天享有自助的晚餐&quot;</td>
+</tr>
+<tr>
+<td>BB</td>
+<td>&quot;Bed and Breakfast&quot;, &quot;所有涵盖的客房中的客人都可以在每天享用酒店提供的早餐&quot;</td>
+</tr>
+<tr>
+<td>HB</td>
+<td>&quot;Half Board&quot;, &quot;所有涵盖的客房中的所有客人都可以在每天享用酒店提供的早餐和晚餐&quot;</td>
+</tr>
+<tr>
+<td>BL</td>
+<td>&quot;Breakfast and Lunch&quot;, &quot;所有涵盖的客房中的客人都可以在每天享用酒店提供的早餐和午餐&quot;</td>
+</tr>
+<tr>
+<td>FB</td>
+<td>&quot;Full Board&quot;, &quot;所有涵盖的客房中的客人都可以在每天享用酒店提供的早餐，午餐和晚餐&quot;</td>
+</tr>
+<tr>
+<td>AI</td>
+<td>&quot;All Inclusive&quot;, &quot;所有涵盖的客房中的客人都可以享有酒店提供全包的餐饮服务&quot;</td>
+</tr>
+<tr>
+<td>AL</td>
+<td>&quot;All Inclusive Light&quot;, &quot;所有涵盖的客房中的客人都可以享有酒店提供全包的餐饮服务，但不包括酒水，或者只包括普通的酒水（可能根据房型或者酒店的不同而有所差异）&quot;</td>
+</tr>
+</tbody></table>
+
+<p><br>
+ <br>
+ <br>
+ <br>
+ <br>
+ <br>
+ <br></p>
+<h2 id='credit-card-code'>信用卡信息代码表（Credit Card Code）</h2>
+<table><thead>
+<tr>
+<th>信用卡代码</th>
+<th>描述</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>VI</td>
+<td>Visa</td>
+</tr>
+<tr>
+<td>MC</td>
+<td>Master Card</td>
+</tr>
+<tr>
+<td>AX</td>
+<td>American Express</td>
+</tr>
+<tr>
+<td>BC</td>
+<td>Bank Card</td>
+</tr>
+<tr>
+<td>BL</td>
+<td>Carte Bleu</td>
+</tr>
+<tr>
+<td>CB</td>
+<td>Carte Blanche</td>
+</tr>
+<tr>
+<td>DN</td>
+<td>Diners Club</td>
+</tr>
+<tr>
+<td>DS</td>
+<td>Discover Card</td>
+</tr>
+<tr>
+<td>EC</td>
+<td>Eurocard</td>
+</tr>
+<tr>
+<td>JC</td>
+<td>Japanese Credit Bureau Credit Card</td>
+</tr>
+<tr>
+<td>TP</td>
+<td>Universal Air Travel Card</td>
+</tr>
+<tr>
+<td>CU</td>
+<td>China Unionpay</td>
+</tr>
+<tr>
+<td>MA</td>
+<td>Maestro Card</td>
+</tr>
+</tbody></table>
+<h3 id='5e7ce34aa3'>试信用卡表（可用于两三方测试）</h3>
+<table><thead>
+<tr>
+<th>信用卡代码</th>
+<th>信用卡号</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>VI</td>
+<td>4111111111111111</td>
+</tr>
+<tr>
+<td>VI</td>
+<td>4444333322221111</td>
+</tr>
+<tr>
+<td>VI</td>
+<td>4387755555555550</td>
+</tr>
+<tr>
+<td>VI</td>
+<td>4865171111111113</td>
+</tr>
+<tr>
+<td>MC</td>
+<td>5442981111111114</td>
+</tr>
+<tr>
+<td>DS</td>
+<td>6011000990099818</td>
+</tr>
+</tbody></table>
+<h2 id='d0881b3ac1'>错误代码表</h2>
+<table><thead>
+<tr>
+<th>Error Code</th>
+<th>Error Message</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>RoomTypeNotFound</td>
+<td>Room Type Not Found</td>
+</tr>
+<tr>
+<td>RatePlanNotFound</td>
+<td>Rate Plan Not Found</td>
+</tr>
+<tr>
+<td>HotelNotFound</td>
+<td>Hotel Not Found</td>
+</tr>
+<tr>
+<td>ChannelNotFound</td>
+<td>Channel Not Found</td>
+</tr>
+<tr>
+<td>SupplierNotFound</td>
+<td>Supplier Not Found</td>
+</tr>
+<tr>
+<td>ReservationNotFound</td>
+<td>Reservation Not Found</td>
+</tr>
+<tr>
+<td>CancelReservationProhibited</td>
+<td>Cancellation Is Not Allowed</td>
+</tr>
+<tr>
+<td>ModifyReservationProhibited</td>
+<td>Modify Is Not Allowed</td>
+</tr>
+<tr>
+<td>OverCancellationTime</td>
+<td>Over Cancellation Time</td>
+</tr>
+<tr>
+<td>NoAllotment</td>
+<td>No Allotment</td>
+</tr>
+<tr>
+<td>ExceedAdultCount</td>
+<td>Exceed Adult Count</td>
+</tr>
+<tr>
+<td>ExceedChildCount</td>
+<td>Exceed Child Count</td>
+</tr>
+<tr>
+<td>IncorrectContactNameFormat</td>
+<td>Incorrect Contact Name Format</td>
+</tr>
+<tr>
+<td>IncorrectContactInfoFormat</td>
+<td>Incorrect Contact Info Format</td>
+</tr>
+<tr>
+<td>IncorrectExtraBreakfastCount</td>
+<td>Incorrect Extra Breakfast Count</td>
+</tr>
+<tr>
+<td>IncorrectExtraBedCount</td>
+<td>Incorrect Extra Bed Count</td>
+</tr>
+<tr>
+<td>IncorrectCheckinDate</td>
+<td>Incorrect CheckIn Date</td>
+</tr>
+<tr>
+<td>IncorrectCheckOutDate</td>
+<td>Incorrect CheckOut Date</td>
+</tr>
+<tr>
+<td>NotSupportedPaymentType</td>
+<td>Not Supported Payment Type</td>
+</tr>
+<tr>
+<td>ExtraBedProhibited</td>
+<td>Extra Bed Not Allowed</td>
+</tr>
+<tr>
+<td>ExtraBreakfastProhibited</td>
+<td>Extra Breakfast Not Allowed</td>
+</tr>
+<tr>
+<td>IncorrectCreditcardNumber</td>
+<td>Incorrect Creditcard Number</td>
+</tr>
+<tr>
+<td>IncorrectCreditcardExpireDate</td>
+<td>Incorrect Creditcard Expire Date</td>
+</tr>
+<tr>
+<td>OverReservationTime</td>
+<td>Over Reservation Time</td>
+</tr>
+<tr>
+<td>DuplicateReservation</td>
+<td>Duplicate Reservation</td>
+</tr>
+<tr>
+<td>NeedAdvanceReserve</td>
+<td>Advance Reserve Is Required</td>
+</tr>
+<tr>
+<td>InconsistentRate</td>
+<td>Inconsistent Rate</td>
+</tr>
+<tr>
+<td>MissingField</td>
+<td>Missing Field</td>
+</tr>
+<tr>
+<td>InconsistentCurrency</td>
+<td>Inconsistent Currency</td>
+</tr>
+<tr>
+<td>System</td>
+<td>Internal System Error</td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>Unknown Error</td>
+</tr>
+<tr>
+<td>NetError</td>
+<td>Network Issue</td>
+</tr>
+<tr>
+<td>Timeout</td>
+<td>Timeout</td>
+</tr>
+<tr>
+<td>InvalidField</td>
+<td>Invalid Field</td>
+</tr>
+</tbody></table>
+<h1 id='0adb1147b3'>常见问题</h1>
+<ol>
+<li><p>调用你们的接口时，返回中出现了乱码是什么原因？</p>
+
+<p>如果您收到的接口返回中出现了乱码，请尝试按下列步骤解决：</p>
+
+<ol>
+<li>在请求的Header中加上&#39;Accept-Charset=utf-8&#39;</li>
+<li>检查并确保在渠道端正确处理返回数据</li>
+<li>联系德比支持部门</li>
+</ol></li>
+<li><p>税前金额（ABT）和税后金额（AAT）有什么区别？</p>
+
+<p>所有的预定类（Reservation）接口都会用到税前金额（@AmountBeforeTax）和税后金额（@Amount AfterTax），一般ABT和AAT这两个值都会返回。如果供应商只返回了其中的一个，当德比返回给渠道时，这两个字段的值可能相同。有些酒店可能返回0，比如当凯悦做免费促销的时候。如果您无法处理返回值为0的情况，请联系我们。</p>
+
+<p>请注意，对大多数酒店而言，批量查看房源数据和查看房源数据接口通过ABT和AAT返回的是<em>每晚</em>房价，而非总价。返回的房价适用于@EffectiveDate 和 @ExpireDate之间的每一晚。对于少数未提供每晚房价的酒店，Go记录并返回Los Rate的值，这是入住期间的均价。</p></li>
+<li><p>IATA代码有什么用？</p>
+
+<p>国际航运协会(IATA)是世界航空业的贸易协会，代表83%左右的航空运输机构。IATA为众多领域的航空活动提供支持，并在遇到航空重大问题的时候，制定产业政策。IATA为其成员分配了IATA代码。</p>
+
+<p>根据您和供应商之间的约定，有些供应商会要求渠道提供IATA代码。如果没有IATA代码，渠道可以将这项留空。</p></li>
+<li><p>一次请求可以订多间房吗？</p>
+
+<p>当房型、房价、客人数量相同时，可以通过指定房间数（@NumberOfUnits），在一次请求中订多件房。
+不满足上述条件的，则需要通过多次请求完成。例如，如果需要订一个大床房和一个双床房，则需要两次请求。</p>
+
+<ol>
+<li>为什么在批量查看房源时显示某家酒店有相应房型可订，但是在单独查看该供应商的房源时，却显示没有该房型？</li>
+</ol>
+
+<p>造成这种情况的可能的原因如下：
+  *  供应商提供的测试数据有误。供应商需要提供正确、完整的数据
+  *  到渠道的连接请求超时，参照附录--&gt;超时，以获得更多相关信息
+  *  数据缓存没有和供应商系统同步。德比将同步缓存</p></li>
+<li><p>Go支持哪些支付方式？</p>
+
+<p>支付方式取决于渠道和供应商之间的商务条款，一般情况下可以使用 SUCC, VCC以及其他客户信用卡进行支付。德比负责将客户的信用卡信息传递给供应商已完成支付。
+如果用户采非信用卡支付方式，那么在预定阶段不需要提供信用卡信息。在这种情况下，渠道需要直接与供应商商定退款流程。</p></li>
+<li><p>每日房价和LOS房价分别是什么？</p>
+
+<p>供应商向德比提供ARI（是否有房，房价，房量）时一般采用两种价格模式，每日房价和LOS（按入住时间计算）价格。当德比向渠道返回房价时，也采用相同的价格模式。</p></li>
+<li><p>币种</p>
+
+<p>通过酒店数据缓存接口和订房接口, Go 以供应商提供的币种返回房价。当渠道使用和供应商不同的币种时，Go 或者渠道都无法在请求和响应中使用渠道的币种来表示房价。因为供应上不接受这种形式的房价。 </p></li>
+<li><p>Go系统安全吗？</p>
+
+<p>DerbySoft 符合PCI安全标准，用户敏感信息，如信用卡账号等我们一律遵循只传输，不存储等原则。所有的请求均通过HTTPS网络传输加密，并且在每个请求的HTTP Header中都有Authorization验证，确保每次请求都是安全且经过授权的。</p></li>
+<li><p>Go系统稳定可靠吗？</p>
+
+<p>我们有业务监控系统，能及时发现异常情况，如间隔多长时间没有请求调用，或者平均响应时间大于合理阈值等。并且有7*24小时人工值班，能确保及时处理异常问题，如有需要，客户会及时的得到通知。</p></li>
+<li><p>你们的接口支持中文么，比如预定请求时的客人姓名，备注等？</p>
+
+<p>请求中含有中文的接口只有订单，对于这个接口，我们是支持中文的传输的，德比软件可以做字符的罗马化，如果需要此项服务，请告知我们。</p></li>
+</ol>
